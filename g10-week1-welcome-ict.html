@@ -305,16 +305,37 @@ body.scaled-up .col-img { display:none; }
 .sh-sub { font-style:italic; color:#5A5F70; }
 .sh-cols { display:grid; grid-template-columns:1fr 1fr; gap:clamp(3px,0.4vw,6px); }
 .sh-col { display:flex; flex-direction:column; gap:clamp(3px,0.4vw,6px); }
-.sh-band { display:grid; grid-template-columns:1fr 1fr; gap:clamp(3px,0.4vw,6px); }
+/* a column holding one box lets it fill the row, so the sheet reads as a printed grid */
+.sh-col > .sh-box:only-child { flex:1; }
 .sh-head { display:flex; justify-content:space-between; gap:8px; align-items:center; background:#EDE6D2; }
+/* the three coloured section bands off the printed sheet, so the replica on
+   screen reads as the same page the students are holding */
+.sh-secbar { font-family:var(--font-display); font-size:0.7em; line-height:1.6; color:#fff;
+  padding:0.45em 0.7em; letter-spacing:.02em; transition:opacity .3s ease; }
+.sh-secbar.navy { background:#1B2A5B; }
+.sh-secbar.gold { background:#9A6E00; }
+.sh-secbar.red  { background:#B32B2B; }
+.sheet.has-ring .sh-secbar { opacity:.34; }
 /* position:relative so a row ring sits on the row itself, not on the whole box */
 .sh-row { display:flex; gap:5px; align-items:flex-start; position:relative; }
+.sh-row > span { flex:1; }
 .sh-tick { flex:none; width:1.15em; height:1.15em; border:2px solid #6C7284; background:#fff; margin-top:1px; }
+/* filled numbered circles down the Success Criteria, 4 is the personal goal */
+.sh-num { flex:none; width:1.55em; height:1.55em; border-radius:50%; background:#1B2A5B; color:#fff;
+  font-style:normal; font-weight:800; font-size:0.95em; line-height:1;
+  display:flex; align-items:center; justify-content:center; }
+.sh-num.goal { background:var(--ring-gold); color:#2B2200; }
 .rule { display:block; border-bottom:1px solid #A9A08A; height:1.05em; }
 .sh-mini { font-size:0.88em; color:#4A4F60; }
 .sh-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:3px; }
 .sh-bar div { text-align:center; border:1px solid #C9BFA4; padding:2px; background:#fff; }
 .sh-bar b { display:block; }
+/* colour-graded barometer: 1 not confident through to 5 mastered */
+.sh-bar div:nth-child(1) { background:#F7CFC9; border-color:#B94B41; }
+.sh-bar div:nth-child(2) { background:#FADFC1; border-color:#B9803A; }
+.sh-bar div:nth-child(3) { background:#FAF0C0; border-color:#B29A34; }
+.sh-bar div:nth-child(4) { background:#DEEFC9; border-color:#7DA555; }
+.sh-bar div:nth-child(5) { background:#C2E7BF; border-color:#4C9346; }
 .sheet .dim { opacity:.34; }
 
 .ringed::after { content:""; position:absolute; inset:-5px; border:4px solid var(--rc, var(--ring-red));
@@ -348,7 +369,9 @@ body.scaled-up .col-img { display:none; }
 /* teacher-only callouts */
 .tcall { background:#0F1424; color:#FFE9A8; font-family:var(--font-label); font-size:var(--label-size);
   padding:0.35em 0.8em; border-left:6px solid var(--p-o); line-height:1.3; }
-.tcall::before { content:"teacher only \00B7 "; color:var(--p-o); }
+/* the non-breaking space is load-bearing: a plain trailing space collapses and
+   welds "teacher only ·" onto the first word of the callout */
+.tcall::before { content:"teacher only \00B7\00A0"; color:var(--p-o); }
 body.hide-teacher [data-teacher-only="true"] { display:none; }
 
 /* ===========================================
@@ -446,9 +469,12 @@ body.hide-teacher [data-teacher-only="true"] { display:none; }
   font-family:var(--font-label); font-size:16px; letter-spacing:.05em; z-index:199;
   background:rgba(21,27,46,.92); color:#DDE4F5; padding:.2em .7em; pointer-events:none; opacity:.8; }
 
-.edit-hotzone { position:fixed; top:0; left:0; width:80px; height:80px; z-index:10000; cursor:pointer; }
-.edit-toggle { position:fixed; top:12px; left:12px; z-index:10001; font-size:20px; background:var(--panel); color:#fff; border:0; padding:6px 10px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .3s ease; }
-.edit-toggle.show, .edit-toggle.active { opacity:1; pointer-events:auto; }
+/* No invisible hot zone anywhere on the projector surface. Edit mode is reached
+   by the pencil in the control pill or the E key, nothing else. This button is
+   only the "edit mode is on" indicator, parked top centre so it can never sit
+   over the timer pill (top left) or the iSAMS pop-up (top right). */
+.edit-toggle { position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:10001; font-size:20px; background:var(--panel); color:#fff; border:0; padding:6px 10px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .3s ease; }
+.edit-toggle.active { opacity:1; pointer-events:auto; }
 body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outline-offset:2px; }
 
 #cursorFx { position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999; }
@@ -461,7 +487,6 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 <div class="progress-bar"></div>
 <nav class="nav-dots" aria-label="Slide navigation"></nav>
 <canvas id="cursorFx" aria-hidden="true"></canvas>
-<div class="edit-hotzone"></div>
 <button class="edit-toggle" id="editToggle" title="Edit mode (E)">&#9999;&#65039;</button>
 <div class="slide-num" id="slideNum">1 / 32</div>
 
@@ -473,7 +498,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 <!-- ================= PERIOD 1 · 08:30 to 09:05 ================= -->
 
 <!-- 1 · Title -->
-<section class="slide g-arcade" data-notes="<strong>Threshold, 08:30.</strong> Stand at the door of IG04 as they arrive from IF05. Greet every student by name if you can, uniform and appearance glance before anyone comes in (Expectations s35), fixes go out before entry, not after. <strong>Presenter keys:</strong> N notes &middot; E edit (autosaves on this machine) &middot; F fullscreen &middot; &#8984;&#8679;H hides teacher callouts &middot; arrow keys move, and a slide with a task shows its timer top left. <strong>The red iSAMS pop-up arrives on slide 3 and follows every slide until you press &#10003; done.</strong>">
+<section class="slide g-arcade" data-notes="<strong>Threshold, 08:30.</strong> Stand at the door of IG04 as they arrive from IF05. Greet every student by name if you can, uniform and appearance glance before anyone comes in (Expectations s35), fixes go out before entry, not after. <strong>Presenter keys:</strong> N notes &middot; E edit (autosaves on this machine) &middot; F fullscreen &middot; &#8984;&#8679;H hides teacher callouts &middot; arrow keys move, and a slide with a task shows its timer top left. <strong>The red iSAMS pop-up arrives on slide 2 and follows every slide until you press &#10003; done.</strong>">
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall I" style="left:8%;  animation-duration:38s; animation-delay:-4s"></div>
     <div class="tetfall T" style="left:24%; animation-duration:52s; animation-delay:-22s"></div>
@@ -489,8 +514,8 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
   </div>
 </section>
 
-<!-- 2 · Entry routine: line order + seating plan -->
-<section class="slide g-stack" data-notes="<strong>Entry routine, 08:30 to 08:36 (6 min).</strong> This is the routine for every lesson, so teach it properly once. Read the line order aloud, then walk them from IF05 to IG04 and let them find their own seat from the plan on screen. Bags away, sit to the plan, name on the sheet. <strong>Physical timetables are handed out this period</strong> (school instruction for Period 1 teachers on day 1), and the housekeeping slide next carries the reminder. <span class='tag cfu'>CFU</span> fist to five on each of the four steps. <strong>Uniform and appearance glance happens at the door, before entry, never after.</strong>">
+<!-- 2 · Entry routine: line order + seating plan · iSAMS ARRIVES HERE -->
+<section class="slide g-stack" data-isams="true" data-notes="<strong>Entry routine, 08:30 to 08:36 (6 min).</strong> This is the routine for every lesson, so teach it properly once. Read the line order aloud, then walk them from IF05 to IG04 and let them find their own seat from the plan on screen. Bags away, sit to the plan, name on the sheet. <strong>The red iSAMS pop-up lands here, at 08:30, and follows every slide until you press &#10003; done. One register for this double, final by 08:35, so it is up before its own deadline.</strong> Open iSAMS with the link inside the pop-up. <strong>Physical timetables are handed out this period</strong> (school instruction for Period 1 teachers on day 1), and the housekeeping slide next carries the reminder. <span class='tag cfu'>CFU</span> fist to five on each of the four steps. <strong>Uniform and appearance glance happens at the door, before entry, never after.</strong>">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal" style="margin-bottom:0.15em">// entry_routine</p>
     <h2 class="reveal" style="margin-bottom:calc(var(--element-gap) * 0.7)">Getting in: four moves, every lesson</h2>
@@ -522,8 +547,8 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
   </div>
 </section>
 
-<!-- 3 · The lesson loop + housekeeping · iSAMS ARRIVES HERE -->
-<section class="slide g-panel" data-isams="true" data-notes="<strong>Housekeeping and the loop, about 1 min.</strong> Fast. This is the shape of every lesson in student words, and it is the slide that carries the register reminder and the timetable handout. <strong>The red iSAMS pop-up lands here and follows every slide until you press &#10003; done. One register for this double, final by 08:35.</strong> Open iSAMS with the link inside the pop-up. <span class='tag cfu'>CFU</span> Cold Call one student to say the four steps back to me. Then fist to five: how confident is everyone else that they know them?">
+<!-- 3 · The lesson loop + housekeeping -->
+<section class="slide g-panel" data-notes="<strong>Housekeeping and the loop, still inside the entry window, 08:30 to 08:36.</strong> This slide is part of settling in, not a block of its own: the class is finding seats and getting sheets while you run it. Fast, about 1 minute. This is the shape of every lesson in student words, and it carries the timetable handout. <strong>The red iSAMS pop-up is already up from the slide before and stays on every slide until you press &#10003; done. One register for this double, final by 08:35.</strong> Open iSAMS with the link inside the pop-up. <span class='tag cfu'>CFU</span> Cold Call one student to say the four steps back to me. Then fist to five: how confident is everyone else that they know them?">
   <div class="slide-content">
     <p class="eyebrow reveal">// how_every_lesson_runs</p>
     <h2 class="reveal">The same loop, every lesson</h2>
@@ -539,7 +564,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 4 · The sheet, walked box by box -->
-<section class="slide g-paper" data-notes="<strong>Sheet walkthrough, about 2 min.</strong> Hand the printed sheets out NOW, one each, names on straight away. Walk it box by box on screen: header, Learning Intention, Success Criteria, Skills and Roles, Do Now, Hint, Challenge, Super Challenge, Exit Ticket, Self-Barometer. Teach the ring code out loud, because every later slide uses it. The sheet is handed in at the end and kept as their record. <span class='tag cfu'>CFU</span> cold call two students: where does your personal goal go? where do the Exit Ticket answers go?">
+<section class="slide g-paper" data-notes="<strong>Sheet walkthrough, still inside the entry window, 08:30 to 08:36.</strong> Handing the sheet out is part of settling in, so this slide sits in the entry block with the two before it, about 2 minutes of it. Hand the printed sheets out NOW, one each, names on straight away. Walk it box by box on screen: header, Learning Intention, Success Criteria, Skills and Roles, Do Now, Hint, Challenge, Super Challenge, Exit Ticket, Self-Barometer. Teach the ring code out loud, because every later slide uses it. The sheet is handed in at the end and kept as their record. <span class='tag cfu'>CFU</span> cold call two students: where does your personal goal go? where do the Exit Ticket answers go?">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// your_control_panel</p>
     <h2 class="reveal">This sheet is the spine of every lesson</h2>
@@ -556,7 +581,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 5 · Do Now, part 1: silent solo -->
-<section class="slide g-well" data-timer="240" data-notes="<strong>Do Now part 1, 4 min silent solo.</strong> Start the 4 minute timer top left. TLAC Do Now: they should already be writing before you say anything. Circulate, do not talk over them. The Hint is on the sheet in Box 6 and revealed on this slide with NEXT if anyone stalls. <strong>Below Level:</strong> the sentence starter stays on screen. <strong>Above Level:</strong> point them at the Challenge box as soon as they finish. Poster 12 is the next slide, and the wall copy is in the room.">
+<section class="slide g-well" data-timer="240" data-notes="<strong>Do Now block opens, 08:36 to 08:46 (10 min). Part 1, 08:36 to 08:40, 4 min silent solo.</strong> Start the 4 minute timer top left. TLAC Do Now: they should already be writing before you say anything. Circulate, do not talk over them. The Hint is on the sheet in Box 6 and revealed on this slide with NEXT if anyone stalls. <strong>Below Level:</strong> the sentence starter stays on screen. <strong>Above Level:</strong> point them at the Challenge box as soon as they finish. Poster 12 is the next slide, and the wall copy is in the room.">
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall O" style="left:6%; animation-duration:46s; animation-delay:-9s"></div>
     <div class="tetfall Z" style="left:93%; animation-duration:54s; animation-delay:-26s"></div>
@@ -582,7 +607,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 6 · Poster 12, big at the point of use -->
-<section class="slide g-paper" data-notes="<strong>Poster 12, about 30 seconds.</strong> Point at the wall copy while the tables negotiate on the next slide. Poster 12 lives on the wall, so it stays visible in the room. My Top Three is a PIES task: everyone thinks alone first, everyone shares before anyone shares twice, and the group has to build one answer out of at least three people's ideas.">
+<section class="slide g-paper" data-notes="<strong>Poster 12, about 30 seconds, inside the Do Now block 08:36 to 08:46.</strong> Point at the wall copy while the tables negotiate on the next slide. Poster 12 lives on the wall, so it stays visible in the room. My Top Three is a PIES task. Everyone thinks alone first, then everyone shares before anyone shares twice. The group builds one answer from at least three people's ideas.">
   <div class="poster-wrap">
     <img src="assets/poster-12.jpg" alt="Poster 12: My Top Three, a cooperative learning activity built on PIES">
   </div>
@@ -594,7 +619,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 7 · Do Now, part 2: the table agrees -->
-<section class="slide g-well" data-timer="240" data-notes="<strong>Do Now part 2, 4 min table share, then 2 min Cold Call.</strong> Fresh 4 minute clock for the table share. Click it when they start talking. Equal Participation is the rule that matters: everyone speaks once before anyone speaks twice. Circulate and listen for who is doing the negotiating. <span class='tag cfu'>CFU</span> Cold Call two tables with NEXT: their agreed Top 3, and whose idea each one was. That second half is the part that makes them listen.">
+<section class="slide g-well" data-timer="240" data-notes="<strong>Do Now part 2, 08:40 to 08:46. Fresh 4 minute clock for the table share, then the partner Cold Call fills what is left of the block, about 2 minutes.</strong> The clock on this slide is its own 4 minutes, separate from the solo clock. Click it when they start talking. Equal Participation is the rule that matters: everyone speaks once before anyone speaks twice. Circulate and listen for who is doing the negotiating. <span class='tag cfu'>CFU</span> Cold Call two tables with NEXT: their agreed Top 3, and whose idea each one was. That second half is the part that makes them listen.">
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall S" style="left:12%; animation-duration:50s; animation-delay:-14s"></div>
   </div>
@@ -610,7 +635,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
         </ul>
         <div class="tblock i reveal" style="margin-top:var(--element-gap)">Tables 1 and 2 work as one group. Table 3 works as a three. Tables 5 and 6 work as one group.</div>
         <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip red">4 minutes &middot; at your table</span></p>
-        <div class="tblock z" data-fragment="1" style="margin-top:var(--element-gap)"><b>Cold Call, 2 minutes.</b> Two tables report their agreed Top 3, and say whose idea each one was. No hands up, I pick.</div>
+        <div class="tblock z" data-fragment="1" style="margin-top:var(--element-gap)"><b>Cold Call.</b> Two tables report their agreed Top 3, and say whose idea each one was. No hands up, I pick.</div>
       </div>
       <div class="col-img reveal sheet-fig sheet-slot" data-rings="b5:gold" style="max-width:min(44vw,600px)"></div>
     </div>
@@ -618,7 +643,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 8 · Challenge -->
-<section class="slide g-well" data-notes="<strong>Challenge, for anyone finished.</strong> Word for word off the sheet, Box 7, two ruled lines. This is the SIP CONNECT verb: it is harder than writing three more items, which is the point. <strong>Above Level:</strong> they go straight here after the solo phase rather than waiting. Do not let anyone sit idle between the Do Now and the Learning Intention.">
+<section class="slide g-well" data-notes="<strong>Challenge, the early-finishers move inside the Do Now block 08:36 to 08:46.</strong> This slide gets no time slot of its own: it is where anyone who is already done goes, while the rest of the block runs. Word for word off the sheet, Box 7, two ruled lines. This is the SIP CONNECT verb: it is harder than writing three more items, which is the point. <strong>Above Level:</strong> they go straight here after the solo phase rather than waiting. Do not let anyone sit idle between the Do Now and the Learning Intention.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// challenge</p>
     <h2 class="reveal">Finished the Do Now? Take the Challenge</h2>
@@ -674,7 +699,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 11 · Mr Igor, profile -->
-<section class="slide g-stack" data-notes="<strong>All about Mr Igor, 08:52 to 09:05 (13 min across the next four slides).</strong> Everything on these slides comes from your own deck and nothing has been added. Keep it moving and let them ask. The Cold Call check lands on the fourth of these slides, so hold the questions until then. <strong>Principal Address s9 check:</strong> do not talk more than the students. If this block runs long, the Soccer Drones tease later is the part that can wait.">
+<section class="slide g-stack" data-notes="<strong>All about Mr Igor, 08:52 to 09:05 (13 min across this slide and the next three). This slide, 08:52 to 08:56.</strong> Everything on these slides comes from your own deck and nothing has been added. Keep it moving and let them ask. The Cold Call check lands on the fourth of these slides, so hold the questions until then. <strong>Principal Address s9 check:</strong> do not talk more than the students. If this block runs long, the Soccer Drones tease later is the part that can wait.">
   <div class="slide-content" style="max-width:min(96vw,1400px)">
     <p class="eyebrow reveal">// player_profile</p>
     <div class="two-col img-left">
@@ -694,7 +719,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 12 · Things I like -->
-<section class="slide g-well" data-notes="<strong>Things I like, about 2 min.</strong> Your own collage slide, so tell the stories behind whichever photo they point at. Nothing here is invented: watches, basketball, Australian Football League, table tennis, chess, and food. Good moment to let a student ask a question, because the whole first half of this lesson is about the class starting from belonging.">
+<section class="slide g-well" data-notes="<strong>Things I like, 08:56 to 08:59 (3 min).</strong> Your own collage slide, so tell the stories behind whichever photo they point at. Nothing here is invented: watches, basketball, Australian Football League, table tennis, chess, and food. Good moment to let a student ask a question, because the whole first half of this lesson is about the class starting from belonging.">
   <div class="slide-content" style="max-width:min(96vw,1400px)">
     <p class="eyebrow reveal">// things_i_like</p>
     <h2 class="reveal">Things I like</h2>
@@ -704,12 +729,12 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 13 · Places -->
-<section class="slide g-well" data-notes="<strong>Holiday photos, about 2 min.</strong> Mostar is the birthplace, the rest is holiday travel from your own deck: Dubrovnik and its city wall, Naples, Kotor. The Game of Thrones line is on the slide because they will ask anyway. Keep this quick, the Cold Call check is next.">
+<section class="slide g-well" data-notes="<strong>Holiday photos, 08:59 to 09:02 (3 min).</strong> Mostar is the birthplace, the rest is holiday travel from your own deck: Dubrovnik and its city wall, Naples, Kotor. The Game of Thrones line is on the slide because they will ask anyway. Keep this quick, the Cold Call check is next.">
   <div class="slide-content" style="max-width:min(96vw,1400px)">
     <p class="eyebrow reveal">// where_i_have_been</p>
     <h2 class="reveal">Where I have been</h2>
     <div class="photo-grid reveal">
-      <figure><img src="assets/travel-mostar.jpg" alt="The old bridge at Mostar, lit at dusk"><figcaption>Mostar, where I was born</figcaption></figure>
+      <figure><img src="assets/travel-mostar.jpg" alt="The old bridge, Stari Most, at Mostar"><figcaption>Mostar, where I was born</figcaption></figure>
       <figure><img src="assets/travel-dubrovnik.jpg" alt="The coast at Dubrovnik, Croatia"><figcaption>Dubrovnik, Croatia</figcaption></figure>
       <figure><img src="assets/travel-wall.jpg" alt="The old city wall at Dubrovnik"><figcaption>The Wall</figcaption></figure>
       <figure><img src="assets/travel-naples.jpg" alt="A street in Naples, Italy"><figcaption>Naples, Italy</figcaption></figure>
@@ -720,7 +745,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 14 · Things I do not like + the hinge + CFU -->
-<section class="slide g-arcade" data-notes="<strong>The hinge, about 2 min, then the check.</strong> Two things, no more. Then say the line on the slide out loud, in your own voice, and let it sit for a beat. It is what hands the lesson over to the routines block in Period 2. <span class='tag cfu'>CFU</span> Cold Call three students, one fact each about Mr Igor, no hands up. Then Building Ratio: 'Who can add one more?' goes to a fourth student before you confirm anything. Three seconds of Wait Time before every answer.">
+<section class="slide g-arcade" data-notes="<strong>The hinge and the check, 09:02 to 09:05 (3 min), the last of the Mr Igor block.</strong> Two things, no more. Then say the line on the slide out loud, in your own voice, and let it sit for a beat. It is what hands the lesson over to the routines block in Period 2. <span class='tag cfu'>CFU</span> Cold Call three students, one fact each about Mr Igor, no hands up. Then Building Ratio: 'Who can add one more?' goes to a fourth student before you confirm anything. Three seconds of Wait Time before every answer.">
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall Z" style="left:14%; animation-duration:42s; animation-delay:-6s"></div>
     <div class="tetfall L" style="left:82%; animation-duration:56s; animation-delay:-30s"></div>
@@ -781,7 +806,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 <!-- ================= PERIOD 2 · 09:10 to 09:45 ================= -->
 
 <!-- 16 · Period 2 opener: the room -->
-<section class="slide g-stack" data-notes="<strong>Lap 1 opens, 09:10 to 09:19 (9 min across the next five slides).</strong> Period 2 starts here. The room confusion is worth thirty seconds of clarity now rather than a term of students in the wrong place. <strong>Above Level:</strong> ask one of them to read the exit routine off the wall and narrate it back before you do. <strong>Below Level:</strong> the numbered steps stay on screen for the whole lap.">
+<section class="slide g-stack" data-notes="<strong>Lap 1, 09:10 to 09:19 (9 min across slides 16 to 21). This slide, about 30 seconds.</strong> Period 2 starts here. Inside the lap: this room slide 30 seconds, Classroom Care 1 min, bathroom and nurse 2 min, uniform 2 min, the Classroom join 3 min on its timer, and the Super Challenge 30 second flash. The room confusion is worth thirty seconds of clarity now rather than a term of students in the wrong place. <strong>Above Level:</strong> ask one of them to read the exit routine off the wall and narrate it back before you do. <strong>Below Level:</strong> the numbered steps stay on screen for the whole lap.">
   <div class="slide-content">
     <span class="chip reveal" style="align-self:flex-start">PERIOD 2 &middot; 09:10</span>
     <p class="eyebrow reveal" style="margin-top:0.6em">// how_this_class_runs</p>
@@ -799,7 +824,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
     <p class="eyebrow reveal">// classroom_care</p>
     <h2 class="reveal">Classroom Care</h2>
     <ul class="plain">
-      <li data-fragment="1"><b>2 desk format.</b> Make groups whenever the task needs it. The desks go back to pairs before you leave.</li>
+      <li data-fragment="1"><b>2 desk format.</b> Whenever the task needs it, make groups. The desks go back to pairs before you leave.</li>
       <li data-fragment="2"><b>Posters live on cupboards.</b> Nothing on classroom walls, and nothing on the windows facing the corridor.</li>
       <li data-fragment="3"><b>Fresh paint, new furniture.</b> We hand this room back better than we found it.</li>
     </ul>
@@ -813,10 +838,10 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
     <p class="eyebrow reveal">// bathroom_and_nurse</p>
     <h2 class="reveal">Bathroom and nurse</h2>
     <div class="tblock i" data-fragment="1">
-      <b>Bathroom.</b> You need an All Access Pass, the pass I hand you at my desk, before you leave the room. Not in the first 15 minutes of a lesson, and not in the last 15. One student out at a time. Nearest bathroom to this room. Five minutes.
+      <b>Bathroom.</b> Before you leave the room, get an All Access Pass from my desk. Not in the first 15 minutes of a lesson, and not in the last 15. One student out at a time. Nearest bathroom to this room. Five minutes.
     </div>
     <div class="tblock s" data-fragment="2" style="margin-top:var(--element-gap)">
-      <b>Feeling unwell.</b> I write you a nurse slip and you go straight to the secondary clinic. The nurse signs you back in.
+      <b>Feeling unwell.</b> I write you a nurse slip. Then you go straight to the secondary clinic. The nurse signs you back in.
     </div>
     <div class="tblock o" data-fragment="3" style="margin-top:var(--element-gap)">
       <b>Break time exists for a reason.</b> Go then, and you never need the pass at all.
@@ -837,14 +862,14 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
       <li data-fragment="5"><b>Shoes:</b> black shoes with plain socks. No coloured trainers, and no coloured socks.</li>
       <li data-fragment="6"><b>Jewellery, watches:</b> one wrist watch. Smart watches are allowed.</li>
       <li data-fragment="7"><b>Jewellery, earrings:</b> up to two thin earrings in each pierced ear. Studs up to 5 mm, sleepers up to 15 mm.</li>
-      <li data-fragment="8"><b>Jewellery, necklaces:</b> one necklace, and only if it has religious significance and stays hidden under your collar.</li>
+      <li data-fragment="8"><b>Jewellery, necklaces:</b> allowed only if it has religious significance and stays hidden under your collar. Limit of one.</li>
       <li data-fragment="9"><b>Drama and sports uniforms</b> are worn on their own days and events only, not in ICT.</li>
     </ul>
   </div>
 </section>
 
 <!-- 20 · Google Classroom join -->
-<section class="slide g-stack" data-timer="300" data-notes="<strong>Classroom join, 5 min. Timer on the slide.</strong> Devices out, this is the BYOD moment. Walk the four steps live on the board while they follow. Circulate hard and buddy anyone stuck to a neighbour before you touch their device. <span class='tag cfu'>CFU</span> everyone holds their screen up showing the class stream before you move on. From Lesson 2 the Do Now lands in Classroom, so a student not joined is a student without a Do Now.">
+<section class="slide g-stack" data-timer="180" data-notes="<strong>Classroom join, 3 min, inside Lap 1. Timer on the slide.</strong> Devices out, this is the BYOD moment. Walk the four steps live on the board while they follow. Circulate hard and buddy anyone stuck to a neighbour before you touch their device. <span class='tag cfu'>CFU</span> everyone holds their screen up showing the class stream before you move on. From Lesson 2 the Do Now lands in Classroom, so a student not joined is a student without a Do Now.">
   <div class="slide-content">
     <p class="eyebrow reveal">// home_base</p>
     <h2 class="reveal">Join Google Classroom now</h2>
@@ -863,7 +888,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 21 · Super Challenge -->
-<section class="slide g-well" data-notes="<strong>Super Challenge, about 1 min.</strong> Word for word off the sheet, Box 8, four ruled lines. Only once every activity in the lesson is finished, and say that out loud, because otherwise the fast finishers skip the Turn and Talk to get to it. This is the critique verb from the Years 9 to 10 band, and it is the SC extension line made real.">
+<section class="slide g-well" data-notes="<strong>Super Challenge, a 30 second flash that closes Lap 1 at 09:19.</strong> Show it, name it, move on. Nobody starts it now. Word for word off the sheet, Box 8, four ruled lines. Only once every activity in the lesson is finished, and say that out loud, because otherwise the fast finishers skip the Turn and Talk to get to it. This is the critique verb from the Years 9 to 10 band, and it is the SC extension line made real.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// super_challenge</p>
     <h2 class="reveal">Super Challenge</h2>
@@ -912,7 +937,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 24 · Personal goal -->
-<section class="slide g-well" data-timer="120" data-notes="<strong>Personal goal, 2 min. Timer on the slide.</strong> Success Criterion 4 belongs to them. Read the three examples, then everyone writes their own on the gold-ringed line. Copying one of the examples word for word is allowed, say so. Circulate and read every goal while they write. <strong>Above Level:</strong> your goal names a habit, not a task. <strong>Below Level:</strong> the three examples on screen are enough. <span class='tag cfu'>CFU</span> Show Call two goals and let the class decide which is checkable, and why. The students judge, not you.">
+<section class="slide g-well" data-timer="120" data-notes="<strong>Personal goal, 09:25 to 09:27, the last 2 min of Lap 2. Timer on the slide.</strong> Success Criterion 4 belongs to them. Read the three examples, then everyone writes their own on the gold-ringed line. Copying one of the examples word for word is allowed, say so. Circulate and read every goal while they write. <strong>Above Level:</strong> your goal names a habit, not a task. <strong>Below Level:</strong> the three examples on screen are enough. <span class='tag cfu'>CFU</span> Show Call two goals and let the class decide which is checkable, and why. The students judge, not you.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// choose_your_goal</p>
     <h2 class="reveal">Success Criterion 4: your personal goal</h2>
@@ -945,7 +970,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 26 · Turn and Talk, its own structured slide -->
-<section class="slide g-stack" data-timer="300" data-notes="<strong>Lap 3 part 1, Turn and Talk, 5 min. Timer on the slide.</strong> Structure copied straight from OTP s6, so an observer can name it. Read all five lines of the structure before anyone speaks. Say 'Swap' out loud at the halfway point, about 2 minutes 30. <span class='tag tt'>Turn and Talk</span> <span class='tag cfu'>CFU</span> the Cold Call comes three slides later, after the roadmap and the drones, and asks for the PARTNER'S answer, so tell them that now, before they start listening. <strong>Below Level:</strong> both questions stay on screen the whole time, and the sentence starter is there. <strong>Above Level:</strong> take Question 2 first, then justify.">
+<section class="slide g-stack" data-timer="300" data-notes="<strong>Lap 3, 09:29 to 09:38 (9 min across this slide, the roadmap and the drones). Part 1, Turn and Talk, 09:29 to 09:34, 5 min. Timer on the slide.</strong> Structure copied straight from OTP s6, so an observer can name it. Read all five lines of the structure before anyone speaks. Say 'Swap' out loud at the halfway point, about 2 minutes 30. <span class='tag tt'>Turn and Talk</span> <span class='tag cfu'>CFU</span> The Cold Call comes three slides later, after the roadmap and the drones. It asks for the PARTNER'S answer, so tell them that now, before they start listening. <strong>Below Level:</strong> both questions stay on screen the whole time, and the sentence starter is there. <strong>Above Level:</strong> take Question 2 first, then justify.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// turn_and_talk</p>
     <h2 class="reveal">Turn and Talk: 5 minutes</h2>
@@ -968,7 +993,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 27 · Roadmap: the AI fortnight -->
-<section class="slide g-arcade" data-notes="<strong>Lap 3 part 2, the roadmap, about 3 min.</strong> A tease, not a lesson. Nothing is built today and nobody touches Gemini today, and the slide says so. The wording comes from the unit itself: a vague prompt makes the AI guess, a detailed one hands it a blueprint, and 'Rubbish in, rubbish out.' Step 3 and 4 are new for Grade 10 and different from how the younger classes ran it, so say that. <strong>Misconception, if it comes up:</strong> AI thinks like a person. It predicts patterns from training data. Name it and park it, it is taught properly next block.">
+<section class="slide g-arcade" data-notes="<strong>Lap 3 part 2, the roadmap, 09:34 to 09:37 (3 min).</strong> A tease, not a lesson. Nothing is built today and nobody touches Gemini today, and the slide says so. The wording comes from the unit itself: a vague prompt makes the AI guess, a detailed one hands it a blueprint, and 'Rubbish in, rubbish out.' Step 3 and 4 are new for Grade 10 and different from how the younger classes ran it, so say that. <strong>Misconception, if it comes up:</strong> AI thinks like a person. It predicts patterns from training data. Name it and park it, it is taught properly next block.">
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall I" style="left:5%;  animation-duration:44s; animation-delay:-7s"></div>
     <div class="tetfall T" style="left:95%; animation-duration:50s; animation-delay:-24s"></div>
@@ -989,7 +1014,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 28 · Soccer Drones tease -->
-<section class="slide g-well" data-notes="<strong>Soccer Drones tease, about 1 min.</strong> Four facts only, and they are the four on the slide. Nothing about AIS dates, rooms or purchases, because none of that exists in the proposal document. If a student asks when, the honest answer is that you do not have a date yet. <strong>Pacing:</strong> this is the one part of the lesson that can move to the top of next lesson if the routines block overran.">
+<section class="slide g-well" data-notes="<strong>Soccer Drones tease, 09:37 to 09:38 (1 min), the last minute of Lap 3.</strong> Four facts only, and they are the four on the slide. Nothing about AIS dates, rooms or purchases, because none of that exists in the proposal document. If a student asks when, the honest answer is that you do not have a date yet. <strong>Pacing:</strong> this is the one part of the lesson that can move to the top of next lesson if the routines block overran.">
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall J" style="left:88%; animation-duration:46s; animation-delay:-12s"></div>
   </div>
@@ -1014,7 +1039,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
     <ul class="steps">
       <li class="reveal"><b>Four of you, partners only.</b> What did your partner say? No hands up, I pick.</li>
       <li class="reveal"><b>Then one more question each.</b> Why do you think they said that?</li>
-      <li class="reveal">If you were in the three at Table 3, tell me what either of the other two said, and name them.</li>
+      <li class="reveal">If you were in the three at Table 3, tell me what either of the other two said. Then name them.</li>
     </ul>
     <div class="tblock i reveal" style="margin-top:var(--content-gap)">Your own answer is not what I am asking for. Say your partner's.</div>
     <div class="tcall reveal" data-teacher-only="true" style="margin-top:var(--element-gap)">three seconds of wait time before every answer. do not rescue the silence.</div>
@@ -1022,7 +1047,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 30 · Reflection -->
-<section class="slide g-paper" data-timer="180" data-notes="<strong>Reflection, 09:40 to 09:43 (3 min). Timer on the slide.</strong> Sheets out, everyone. Green ring is the Success Criteria block, gold ring is the Self-Barometer. A tick means you can do it now, say it one more time. <strong>Show Call one sheet and celebrate an honest 2</strong>, out loud, by name if they are happy with it. Honesty is the entire point of the barometer, and if the first lesson rewards a dishonest 5 you will never get a true one again.">
+<section class="slide g-paper" data-timer="60" data-notes="<strong>Reflection block, 09:40 to 09:43 (3 min across this slide and the Exit Ticket). This slide, 09:40 to 09:41, one minute on the timer: ticks and barometer only.</strong> Sheets out, everyone. Green ring is the Success Criteria block, gold ring is the Self-Barometer. A tick means you can do it now, say it one more time. <strong>Show Call one sheet and celebrate an honest 2</strong>, out loud, by name if they are happy with it. Honesty is the entire point of the barometer, and if the first lesson rewards a dishonest 5 you will never get a true one again.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// reflection</p>
     <h2 class="reveal">Tick honestly</h2>
@@ -1041,7 +1066,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 31 · Exit Ticket -->
-<section class="slide g-paper" data-timer="120" data-notes="<strong>Exit Ticket, 2 min. Timer on the slide.</strong> Both questions word for word off the sheet, Box 9, two ruled lines each. The Classroom Care line under Q2 is the cue to reset the room, so read it before they stand rather than after. The join code stays visible for anyone who did not get into Classroom earlier. <span class='tag cfu'>CFU</span> read two answers aloud as you collect, no names.">
+<section class="slide g-paper" data-timer="120" data-notes="<strong>Exit Ticket, 09:41 to 09:43, the last 2 min of the reflection block. Timer on the slide.</strong> Both questions word for word off the sheet, Box 9, two ruled lines each. The Classroom Care line under Q2 is the cue to reset the room, so read it before they stand rather than after. The join code stays visible for anyone who did not get into Classroom earlier. <span class='tag cfu'>CFU</span> read two answers aloud as you collect, no names.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// exit_ticket</p>
     <h2 class="reveal">Exit Ticket</h2>
@@ -1088,6 +1113,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
       <span><b>Week 1 Day 1 : Welcome to ICT, and what the next two weeks look like</b></span>
       <span>Student: <span class="rule" style="display:inline-block; width:6em"></span></span>
     </div>
+    <div class="sh-secbar navy">START HERE &middot; WHAT WE ARE LEARNING</div>
     <div class="sh-cols">
       <div class="sh-col">
         <div class="sh-box b2">
@@ -1097,20 +1123,25 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
           <span class="sh-mini">Artificial intelligence (AI): computer software that learns patterns from huge amounts of information, then uses those patterns to make something new.</span>
           <span class="sh-mini">Why: your starting view of AI is the thing we test and sharpen over the next two weeks. The routines mean every lesson starts itself, so the build time stays yours.</span>
         </div>
-        <div class="sh-box b3">
-          <span class="sh-h">SUCCESS CRITERIA</span>
-          <span class="sh-row b3r1"><i class="sh-tick"></i><span>1 &nbsp;I can <i><b>use</b></i> the entry routine on my own: line up alphabetically, sit to the plan, start the Do Now.</span></span>
-          <span class="sh-row b3r2"><i class="sh-tick"></i><span>2 &nbsp;I can <i><b>explain</b></i> one place artificial intelligence already turns up in my life, and why it matters.</span></span>
-          <span class="sh-row b3r3"><i class="sh-tick"></i><span>3 &nbsp;I can <i><b>evaluate</b></i> my own work against Success Criteria 1 and 2, and tick honestly.</span></span>
-          <span class="sh-mini">Going further: I can <i><b>critique</b></i> one use of artificial intelligence that I think is not justified.</span>
-          <span class="sh-row b3r4"><i class="sh-tick"></i><span>4 &nbsp;Personal goal: <span class="rule"></span></span></span>
-        </div>
         <div class="sh-box b4">
           <span class="sh-h">SKILLS AND ROLES</span>
           <span>Skills focus today: listen well enough to say your partner's answer back. Also judge your own work honestly against the Success Criteria.</span>
           <span>Your role today: table member. Everyone shares once before anyone shares twice.</span>
         </div>
       </div>
+      <div class="sh-col">
+        <div class="sh-box b3">
+          <span class="sh-h">SUCCESS CRITERIA</span>
+          <span class="sh-row b3r1"><i class="sh-num">1</i><span>I can <i><b>use</b></i> the entry routine on my own: line up alphabetically, sit to the plan, start the Do Now.</span><i class="sh-tick"></i></span>
+          <span class="sh-row b3r2"><i class="sh-num">2</i><span>I can <i><b>explain</b></i> one place artificial intelligence already turns up in my life, and why it matters.</span><i class="sh-tick"></i></span>
+          <span class="sh-row b3r3"><i class="sh-num">3</i><span>I can <i><b>evaluate</b></i> my own work against Success Criteria 1 and 2, and tick honestly.</span><i class="sh-tick"></i></span>
+          <span class="sh-mini">Going further: I can <i><b>critique</b></i> one use of artificial intelligence that I think is not justified.</span>
+          <span class="sh-row b3r4"><i class="sh-num goal">4</i><span>Personal goal: <span class="rule"></span></span><i class="sh-tick"></i></span>
+        </div>
+      </div>
+    </div>
+    <div class="sh-secbar gold">THE WORK &middot; DO NOW, HINT, CHALLENGE</div>
+    <div class="sh-cols">
       <div class="sh-col">
         <div class="sh-box b5">
           <span class="sh-h">DO NOW: My Top Three</span>
@@ -1124,40 +1155,47 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
           <span class="sh-h">HINT (stuck on the Do Now?)</span>
           <span>Think about your last 24 hours. What did you switch on, pick up or open first?</span>
         </div>
+      </div>
+      <div class="sh-col">
         <div class="sh-box b7">
           <span class="sh-h">CHALLENGE (finished the Do Now?)</span>
           <span>Connect your three. Write one sentence that is true for all three of your choices.</span>
           <span class="rule"></span><span class="rule"></span>
         </div>
+        <div class="sh-box b8">
+          <span class="sh-h">SUPER CHALLENGE</span>
+          <span class="sh-mini">Only once every activity in the lesson is finished.</span>
+          <span>On your own device, research one real use of artificial intelligence. Then <i><b>critique</b></i> it. Write three things: the use you found, what could go wrong, and what a person still has to do.</span>
+          <span class="sh-mini">Hand it to Mr Igor, or post it in Google Classroom once you have joined.</span>
+          <span class="rule"></span><span class="rule"></span><span class="rule"></span><span class="rule"></span>
+        </div>
       </div>
     </div>
-    <div class="sh-band">
-      <div class="sh-box b8">
-        <span class="sh-h">SUPER CHALLENGE</span>
-        <span class="sh-mini">Only once every activity in the lesson is finished.</span>
-        <span>On your own device, research one real use of artificial intelligence. Then <i><b>critique</b></i> it. Write three things: the use you found, what could go wrong, and what a person still has to do.</span>
-        <span class="sh-mini">Hand it to Mr Igor, or post it in Google Classroom once you have joined.</span>
-        <span class="rule"></span><span class="rule"></span><span class="rule"></span><span class="rule"></span>
+    <div class="sh-secbar red">END OF LESSON &middot; BEFORE YOU LEAVE</div>
+    <div class="sh-cols">
+      <div class="sh-col">
+        <div class="sh-box b9">
+          <span class="sh-h">EXIT TICKET</span>
+          <span>Q1 &nbsp;Write one thing you now know about how this class runs.</span>
+          <span class="rule"></span><span class="rule"></span>
+          <span>Q2 &nbsp;Write one thing you already think about artificial intelligence.</span>
+          <span class="rule"></span><span class="rule"></span>
+          <span class="sh-mini">BEFORE YOU STAND: DESKS BACK TO THE 2 DESK FORMAT, CHAIRS IN, NOTHING LEFT BEHIND.</span>
+        </div>
       </div>
-      <div class="sh-box b9">
-        <span class="sh-h">EXIT TICKET</span>
-        <span>Q1 &nbsp;Write one thing you now know about how this class runs.</span>
-        <span class="rule"></span><span class="rule"></span>
-        <span>Q2 &nbsp;Write one thing you already think about artificial intelligence.</span>
-        <span class="rule"></span><span class="rule"></span>
-        <span class="sh-mini">BEFORE YOU STAND: DESKS BACK TO THE 2 DESK FORMAT, CHAIRS IN, NOTHING LEFT BEHIND.</span>
+      <div class="sh-col">
+        <div class="sh-box b10">
+          <span class="sh-h">SELF-BAROMETER</span>
+          <span class="sh-sub">Tick where you are</span>
+          <span class="sh-bar">
+            <div><b>1</b>Not Confident<br>Needs support<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+            <div><b>2</b>Basic<br>Needs guidance<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+            <div><b>3</b>Developing<br>With reminders<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+            <div><b>4</b>Confident<br>Independent<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+            <div><b>5</b>Mastered<br>Can teach others<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+          </span>
+        </div>
       </div>
-    </div>
-    <div class="sh-box b10">
-      <span class="sh-h">SELF-BAROMETER</span>
-      <span class="sh-sub">Tick where you are</span>
-      <span class="sh-bar">
-        <div><b>1</b>Not Confident<br>Needs support<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-        <div><b>2</b>Basic<br>Needs guidance<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-        <div><b>3</b>Developing<br>With reminders<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-        <div><b>4</b>Confident<br>Independent<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-        <div><b>5</b>Mastered<br>Can teach others<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-      </span>
     </div>
   </div>
 </template>
@@ -1190,7 +1228,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
    Any deck push bumps DECK_VERSION (push-update.sh does it automatically), which purges
    stored edits so a stale edit can never be restored over a restructured deck.
    Everything else (font scale, teacher toggle, iSAMS state, timers) stays session-only. */
-const DECK_VERSION = 'v20260831-194624';
+const DECK_VERSION = 'v20260831-202338';
 const EDIT_KEY = 'g10w1-edits:' + DECK_VERSION;
 try { Object.keys(localStorage).forEach(k => { if (k !== EDIT_KEY) localStorage.removeItem(k); }); } catch (e) {}
 
@@ -1438,8 +1476,9 @@ class SlidePresentation {
 
 /* ===========================================
    iSAMS REGISTER POP-UP
-   Arrives on the slide marked data-isams (the housekeeping slide, 3) and
-   stays on EVERY slide from there until the teacher presses done.
+   Arrives on the slide marked data-isams (the entry routine slide, 2, which is
+   on screen from 08:30) and stays on EVERY slide from there until the teacher
+   presses done, so it is up well before its own 08:35 deadline.
    One register for this double, final by 08:35, per Igor's timetable.
    Session-only: a fresh page load brings it back for the next class.
    =========================================== */
@@ -1449,7 +1488,7 @@ class IsamsReminder {
     this.pop = document.getElementById('isamsPop');
     this.done = false;
     this.fromIndex = Array.from(presentation.slides).findIndex(s => s.dataset.isams === 'true');
-    if (this.fromIndex < 0) this.fromIndex = 2;
+    if (this.fromIndex < 0) this.fromIndex = 1;
     document.getElementById('isamsDone').addEventListener('click', () => {
       this.done = true;
       this.apply();
@@ -1783,15 +1822,12 @@ class InlineEditor {
     });
     this.toggleBtn = document.getElementById('editToggle');
     this.pillBtn = document.getElementById('editBtn');
-    const hotzone = document.querySelector('.edit-hotzone');
-    let hideTimeout = null;
+    /* Two ways in, both deliberate: the pencil in the control pill, or the E key.
+       There is no invisible hot zone on the projector surface any more, because
+       it sat over the timer pill and a tap on the clock flipped the whole deck
+       into edit mode in front of the class. */
     this.toggleBtn.addEventListener('click', () => this.toggleEditMode());
     this.pillBtn.addEventListener('click', () => this.toggleEditMode());
-    hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); this.toggleBtn.classList.add('show'); });
-    hotzone.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!this.isActive) this.toggleBtn.classList.remove('show'); }, 400); });
-    this.toggleBtn.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
-    this.toggleBtn.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!this.isActive) this.toggleBtn.classList.remove('show'); }, 400); });
-    hotzone.addEventListener('click', () => this.toggleEditMode());
     document.addEventListener('keydown', (e) => {
       if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable') && !e.metaKey && !e.ctrlKey) this.toggleEditMode();
       if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); this.exportFile(); }
