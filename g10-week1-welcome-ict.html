@@ -289,54 +289,25 @@ body.scaled-up .col-img { display:none; }
    One template, cloned into every point of use, so the deck and the
    printed sheet can never drift apart. Rings mark the exact box.
    =========================================== */
-.sheet { background:var(--paper); color:var(--ink); width:100%; padding:clamp(5px,0.7vw,10px);
-  display:flex; flex-direction:column; gap:clamp(3px,0.4vw,6px);
+/* The sheet on screen IS the exported page, assets/sheet.png, so the class
+   always sees the sheet they are holding rather than a lookalike. */
+.sheet { position:relative; width:100%; background:var(--paper); line-height:0;
   box-shadow:0 0 0 var(--px) var(--panel-2), 10px 10px 0 rgba(0,0,0,.35);
-  font-size:calc(clamp(0.4rem, 0.72vw, 0.62rem) * var(--font-scale)); line-height:1.3; }
+  transform-origin:top center; }
+/* max-height:none overrides the global picture cap: the sheet is sized by
+   fitSheets against the slide, and its box must keep the page's exact shape
+   or the ring rectangles stop landing on the right box */
+.sheet-img { display:block; width:100%; height:auto; max-height:none; aspect-ratio:3000 / 1688;
+  position:relative; z-index:0; }
 .sheet-fig { position:relative; align-self:center; width:100%; max-width:min(52vw, 640px); }
 .sheet-fig.big { max-width:min(94vw, 1400px); }
-.sheet-fig.big .sheet { font-size:calc(clamp(0.55rem, 1.05vw, 0.9rem) * var(--font-scale)); }
-/* fitSheets() scales the sheet down by exactly the amount a slide overruns,
-   so it is always as big as that slide allows and never clipped */
-.sheet { transform-origin:top center; }
-.sh-box { background:#FFFDF6; border:2px solid #C9BFA4; padding:clamp(3px,0.45vw,7px); position:relative;
-  display:flex; flex-direction:column; gap:2px; transition:opacity .3s ease; }
-.sh-h { font-family:var(--font-display); font-size:0.82em; color:#1F2430; letter-spacing:.01em; line-height:1.5; }
-.sh-sub { font-style:italic; color:#5A5F70; }
-.sh-cols { display:grid; grid-template-columns:1fr 1fr; gap:clamp(3px,0.4vw,6px); }
-.sh-col { display:flex; flex-direction:column; gap:clamp(3px,0.4vw,6px); }
-/* a column holding one box lets it fill the row, so the sheet reads as a printed grid */
-.sh-col > .sh-box:only-child { flex:1; }
-.sh-head { display:flex; justify-content:space-between; gap:8px; align-items:center; background:#EDE6D2; }
-/* the three coloured section bands off the printed sheet, so the replica on
-   screen reads as the same page the students are holding */
-.sh-secbar { font-family:var(--font-display); font-size:0.7em; line-height:1.6; color:#fff;
-  padding:0.45em 0.7em; letter-spacing:.02em; transition:opacity .3s ease; }
-.sh-secbar.navy { background:#1B2A5B; }
-.sh-secbar.gold { background:#9A6E00; }
-.sh-secbar.red  { background:#B32B2B; }
-.sheet.has-ring .sh-secbar { opacity:.34; }
-/* position:relative so a row ring sits on the row itself, not on the whole box */
-.sh-row { display:flex; gap:5px; align-items:flex-start; position:relative; }
-.sh-row > span { flex:1; }
-.sh-tick { flex:none; width:1.15em; height:1.15em; border:2px solid #6C7284; background:#fff; margin-top:1px; }
-/* filled numbered circles down the Success Criteria, 4 is the personal goal */
-.sh-num { flex:none; width:1.55em; height:1.55em; border-radius:50%; background:#1B2A5B; color:#fff;
-  font-style:normal; font-weight:800; font-size:0.95em; line-height:1;
-  display:flex; align-items:center; justify-content:center; }
-.sh-num.goal { background:var(--ring-gold); color:#2B2200; }
-.rule { display:block; border-bottom:1px solid #A9A08A; height:1.05em; }
-.sh-mini { font-size:0.88em; color:#4A4F60; }
-.sh-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:3px; }
-.sh-bar div { text-align:center; border:1px solid #C9BFA4; padding:2px; background:#fff; }
-.sh-bar b { display:block; }
-/* colour-graded barometer: 1 not confident through to 5 mastered */
-.sh-bar div:nth-child(1) { background:#F7CFC9; border-color:#B94B41; }
-.sh-bar div:nth-child(2) { background:#FADFC1; border-color:#B9803A; }
-.sh-bar div:nth-child(3) { background:#FAF0C0; border-color:#B29A34; }
-.sh-bar div:nth-child(4) { background:#DEEFC9; border-color:#7DA555; }
-.sh-bar div:nth-child(5) { background:#C2E7BF; border-color:#4C9346; }
-.sheet .dim { opacity:.34; }
+/* every ring zone is a percentage rectangle measured off the exported page,
+   so a ring always lands on the real box, at any projector size */
+.sh-zone { position:absolute; left:var(--l); top:var(--t); width:var(--w); height:var(--h);
+  pointer-events:none; z-index:2; }
+/* the wash outside the rings: one shape with the ringed rectangles punched
+   out, so two rings on the same slide never fade each other */
+.sheet-wash { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
 
 .ringed::after { content:""; position:absolute; inset:-5px; border:4px solid var(--rc, var(--ring-red));
   pointer-events:none; animation:ringpulse 1.35s ease-in-out infinite;
@@ -344,7 +315,8 @@ body.scaled-up .col-img { display:none; }
 .ring-red   { --rc:var(--ring-red); }
 .ring-green { --rc:var(--ring-green); }
 .ring-gold  { --rc:var(--ring-gold); }
-.sh-row.ringed::after { inset:-3px; border-width:3px; }
+/* a single criteria row is a thin band, so its ring hugs it tighter */
+.sh-zone.row.ringed::after { inset:-3px; border-width:3px; }
 @keyframes ringpulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.03); opacity:.7; } }
 
 .ring-key { display:flex; flex-wrap:wrap; gap:0.5em 1.1em; font-family:var(--font-label);
@@ -571,6 +543,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
     <div class="sheet-fig big reveal sheet-slot" data-rings=""></div>
     <div class="reveal" style="margin-top:var(--element-gap); display:flex; flex-wrap:wrap; gap:0.6em 1.4em; align-items:center">
       <span class="chip">name on it &middot; handed in at the end &middot; kept as your record</span>
+      <a class="linkbtn gold" href="https://docs.google.com/presentation/d/1iKpZh4ic0FaJeelzM3WseTOu_Asy3eTqem2y7xORRUc/edit" target="_blank" rel="noopener">&#9654; open the LI SC sheet</a>
       <div class="ring-key">
         <span class="k-red"><i></i> red ring = Learning Intention and Exit Ticket</span>
         <span class="k-green"><i></i> green ring = Success Criteria</span>
@@ -591,7 +564,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
     <h2 class="reveal">Do Now: My Top Three</h2>
     <div class="two-col" style="align-items:start">
       <div style="max-width:680px">
-        <div class="tblock o reveal"><b>Write your own Top 3 first, on your own, in silence. Your table agrees one Top 3 after.</b><br>Category: the technology you would not want to live without.</div>
+        <div class="tblock o reveal"><b>Your own Top 3 first, alone, in silence. Then your table agrees one Top 3.</b><br>Category: the technology you would not want to live without.</div>
         <ul class="steps" style="margin-top:var(--element-gap)">
           <li class="reveal">My number one, and one reason why.</li>
           <li class="reveal">My number two.</li>
@@ -643,14 +616,14 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 8 · Challenge -->
-<section class="slide g-well" data-notes="<strong>Challenge, the early-finishers move inside the Do Now block 08:36 to 08:46.</strong> This slide gets no time slot of its own: it is where anyone who is already done goes, while the rest of the block runs. Word for word off the sheet, Box 7, two ruled lines. This is the SIP CONNECT verb: it is harder than writing three more items, which is the point. <strong>Above Level:</strong> they go straight here after the solo phase rather than waiting. Do not let anyone sit idle between the Do Now and the Learning Intention.">
+<section class="slide g-well" data-notes="<strong>Challenge, the early-finishers move inside the Do Now block 08:36 to 08:46.</strong> This slide gets no time slot of its own: it is where anyone who is already done goes, while the rest of the block runs. Word for word off the sheet, Box 7. This is the SIP CONNECT verb: it is harder than writing three more items, which is the point. <strong>Above Level:</strong> they go straight here after the solo phase rather than waiting. Do not let anyone sit idle between the Do Now and the Learning Intention.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// challenge</p>
     <h2 class="reveal">Finished the Do Now? Take the Challenge</h2>
     <div class="two-col" style="align-items:start">
       <div style="max-width:680px">
         <div class="tblock o reveal" style="font-size:calc(clamp(0.95rem,1.9vw,1.4rem) * var(--font-scale))"><b>CHALLENGE (finished the Do Now?)</b><br>Connect your three. Write one sentence that is true for all three of your choices.</div>
-        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">two ruled lines, in the CHALLENGE box</span></p>
+        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">CHALLENGE box, gold ring</span></p>
         <div class="tblock i reveal" style="margin-top:var(--element-gap)">One sentence, not three. The harder it is to find something true of all three, the better your answer will be.</div>
       </div>
       <div class="col-img reveal sheet-fig sheet-slot" data-rings="b7:gold" style="max-width:min(44vw,600px)"></div>
@@ -659,20 +632,21 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 9 · Learning Intention -->
-<section class="slide g-panel" data-notes="<strong>Learning Intention, 08:46 to 08:49 (3 min).</strong> Read it aloud, then have two students read it back. The verbs are the doing words and they come from the Years 9 to 10 band: explain is AC9TDI10K02, use is AC9TDI10P11 and P12. Point at the red ring: this is Box 2 on their sheet, word for word. Define artificial intelligence here, on this slide, because it is the first time the class meets the term in this subject. <strong>Misconception to expect:</strong> AI thinks like a person. It predicts patterns from training data. Name it, park it, teach it properly next block.">
+<section class="slide g-panel" data-notes="<strong>Learning Intention, 08:46 to 08:49 (3 min).</strong> Read it aloud, then have two students read it back. The verbs are the doing words and they come from the Years 9 to 10 band: explain is AC9TDI10K02, use is AC9TDI10P11 and P12. Point at the red ring: this is Box 2 on their sheet, word for word. The definition of artificial intelligence lives on this slide only, not on their sheet, so say it out loud and let them hear it twice. It is the first time the class meets the term in this subject. <strong>Misconception to expect:</strong> AI thinks like a person. It predicts patterns from training data. Name it, park it, teach it properly next block.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// learning_intention</p>
     <h2 class="reveal">What we are learning today</h2>
     <div class="two-col" style="align-items:start">
       <div style="max-width:700px">
         <div class="tblock z reveal" style="font-size:calc(clamp(0.95rem,1.9vw,1.4rem) * var(--font-scale))">
-          We are learning to <span class="verb">explain</span> what you already think artificial intelligence is. We are also learning to <span class="verb">use</span> the routines this class runs on.
+          We are learning to <span class="verb">explain</span> what you already think artificial intelligence is, and to <span class="verb">use</span> the routines this class runs on.
+        </div>
+        <div class="tblock o reveal" style="margin-top:var(--element-gap)">
+          <b>Why:</b> your starting view of AI is what we test and sharpen over the next two weeks.
         </div>
         <div class="tblock i reveal" style="margin-top:var(--element-gap)">
           <b>Artificial intelligence (AI):</b> computer software that learns patterns from huge amounts of information, then uses those patterns to make something new.
-        </div>
-        <div class="tblock o reveal" style="margin-top:var(--element-gap)">
-          <b>Why:</b> your starting view of AI is the thing we test and sharpen over the next two weeks. The routines mean every lesson starts itself, so the build time stays yours.
+          <br><span class="small">Said here, on the board. It is not printed on your sheet, so listen for it.</span>
         </div>
       </div>
       <div class="col-img reveal sheet-fig sheet-slot" data-rings="b2:red" style="max-width:min(44vw,600px)"></div>
@@ -681,17 +655,17 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 10 · Success Criteria -->
-<section class="slide g-panel" data-notes="<strong>Success Criteria, 08:49 to 08:52 (3 min).</strong> Students read these back, not you. Word for word the same on the sheet, the slides and the lesson plan, one source only. Verbs from the Years 9 to 10 band: use, explain, evaluate, critique. Criterion 4 is theirs and they write it in Lap 2, so flag it now and move on. <span class='tag cfu'>CFU</span> cold call three students: which criterion will be hardest for you today, and why?">
+<section class="slide g-panel" data-notes="<strong>Success Criteria, 08:49 to 08:52 (3 min).</strong> Students read these back, not you. Word for word the same on the sheet, the slides and the lesson plan, one source only. Verbs from the Years 9 to 10 band: use, explain, evaluate, critique. The Going further line is on the board only, not on their sheet, so read it out. Criterion 4 is theirs and they write it in Lap 2, so flag it now and move on. <span class='tag cfu'>CFU</span> cold call three students: which criterion will be hardest for you today, and why?">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// success_criteria</p>
     <h2 class="reveal">How you will know you got there</h2>
     <div class="two-col" style="align-items:start">
       <div style="max-width:700px">
-        <div class="tblock s reveal"><b>1 &middot;</b> I can <span class="verb">use</span> the entry routine on my own: line up alphabetically, sit to the plan, start the Do Now.</div>
-        <div class="tblock s reveal" style="margin-top:var(--element-gap)"><b>2 &middot;</b> I can <span class="verb">explain</span> one place artificial intelligence already turns up in my life, and why it matters.</div>
+        <div class="tblock s reveal"><b>1 &middot;</b> I can <span class="verb">use</span> the entry routine on my own.</div>
+        <div class="tblock s reveal" style="margin-top:var(--element-gap)"><b>2 &middot;</b> I can <span class="verb">explain</span> one place artificial intelligence already turns up in my life.</div>
         <div class="tblock s reveal" style="margin-top:var(--element-gap)"><b>3 &middot;</b> I can <span class="verb">evaluate</span> my own work against Success Criteria 1 and 2, and tick honestly.</div>
         <div class="tblock o reveal" style="margin-top:var(--element-gap)"><b>4 &middot;</b> Personal goal: you write your own, later this lesson.</div>
-        <p class="small reveal" style="margin-top:var(--element-gap)"><b>Going further:</b> I can <span class="verb">critique</span> one use of artificial intelligence that I think is not justified.</p>
+        <p class="small reveal" style="margin-top:var(--element-gap)"><b>Going further</b> (on the board, not on your sheet): I can <span class="verb">critique</span> one use of artificial intelligence that I think is not justified.</p>
       </div>
       <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3:green" style="max-width:min(44vw,600px)"></div>
     </div>
@@ -888,18 +862,18 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 21 · Super Challenge -->
-<section class="slide g-well" data-notes="<strong>Super Challenge, a 30 second flash that closes Lap 1 at 09:19.</strong> Show it, name it, move on. Nobody starts it now. Word for word off the sheet, Box 8, four ruled lines. Only once every activity in the lesson is finished, and say that out loud, because otherwise the fast finishers skip the Turn and Talk to get to it. This is the critique verb from the Years 9 to 10 band, and it is the SC extension line made real.">
+<section class="slide g-well" data-notes="<strong>Super Challenge, a 30 second flash that closes Lap 1 at 09:19.</strong> Show it, name it, move on. Nobody starts it now. Word for word off the sheet, Box 8. Only once everything else is finished, and say that out loud, because otherwise the fast finishers skip the Turn and Talk to get to it. This is the critique verb from the Years 9 to 10 band, and it is the SC extension line made real.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// super_challenge</p>
     <h2 class="reveal">Super Challenge</h2>
     <div class="two-col" style="align-items:start">
       <div style="max-width:680px">
-        <div class="tblock o reveal"><b>Only once every activity in the lesson is finished.</b></div>
+        <div class="tblock o reveal"><b>Only once everything else is finished.</b></div>
         <div class="tblock o reveal" style="margin-top:var(--element-gap); font-size:calc(clamp(0.92rem,1.8vw,1.32rem) * var(--font-scale))">
-          On your own device, research one real use of artificial intelligence. Then <span class="verb">critique</span> it. Write three things: the use you found, what could go wrong, and what a person still has to do.
+          On your own device, research one real use of AI. Then <span class="verb">critique</span> it: the use, what could go wrong, what a person still has to do.
         </div>
-        <div class="tblock i reveal" style="margin-top:var(--element-gap)">Hand it to Mr Igor, or post it in Google Classroom once you have joined.</div>
-        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">four ruled lines, in the SUPER CHALLENGE box</span></p>
+        <div class="tblock i reveal" style="margin-top:var(--element-gap)">Hand in, or post it in Classroom.</div>
+        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">SUPER CHALLENGE box, gold ring</span></p>
       </div>
       <div class="col-img reveal sheet-fig sheet-slot" data-rings="b8:gold" style="max-width:min(44vw,600px)"></div>
     </div>
@@ -1066,7 +1040,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 31 · Exit Ticket -->
-<section class="slide g-paper" data-timer="120" data-notes="<strong>Exit Ticket, 09:41 to 09:43, the last 2 min of the reflection block. Timer on the slide.</strong> Both questions word for word off the sheet, Box 9, two ruled lines each. The Classroom Care line under Q2 is the cue to reset the room, so read it before they stand rather than after. The join code stays visible for anyone who did not get into Classroom earlier. <span class='tag cfu'>CFU</span> read two answers aloud as you collect, no names.">
+<section class="slide g-paper" data-timer="120" data-notes="<strong>Exit Ticket, 09:41 to 09:43, the last 2 min of the reflection block. Timer on the slide.</strong> Both questions word for word off the sheet, Box 9. The Classroom Care line under Q2 is the cue to reset the room, so read it before they stand rather than after. The sheet button on this slide pulls the page up for anyone who has lost theirs. The join code stays visible for anyone who did not get into Classroom earlier. <span class='tag cfu'>CFU</span> read two answers aloud as you collect, no names.">
   <div class="slide-content" style="max-width:min(96vw,1420px)">
     <p class="eyebrow reveal">// exit_ticket</p>
     <h2 class="reveal">Exit Ticket</h2>
@@ -1074,9 +1048,11 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
       <div style="max-width:620px">
         <div class="tblock z reveal" style="font-size:calc(clamp(0.92rem,1.8vw,1.32rem) * var(--font-scale))"><b>Q1 &middot;</b> Write one thing you now know about how this class runs.</div>
         <div class="tblock z reveal" style="margin-top:var(--element-gap); font-size:calc(clamp(0.92rem,1.8vw,1.32rem) * var(--font-scale))"><b>Q2 &middot;</b> Write one thing you already think about artificial intelligence.</div>
-        <div class="tblock o reveal" style="margin-top:var(--element-gap)"><b>Before you stand:</b> desks back to the 2 desk format, chairs in, nothing left behind.</div>
-        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">not in Classroom yet? code: yvyk3hu2</span>
-          &nbsp;<a class="linkbtn" href="https://classroom.google.com" target="_blank" rel="noopener">&#9654; open Google Classroom</a></p>
+        <div class="tblock o reveal" style="margin-top:var(--element-gap)"><b>Before you stand:</b> desks to the 2 desk format, chairs in.</div>
+        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">both answers go on the back of your sheet</span>
+          &nbsp;<span class="chip">not in Classroom yet? code: yvyk3hu2</span>
+          &nbsp;<a class="linkbtn" href="https://classroom.google.com" target="_blank" rel="noopener">&#9654; open Google Classroom</a>
+          &nbsp;<a class="linkbtn gold" href="https://docs.google.com/presentation/d/1iKpZh4ic0FaJeelzM3WseTOu_Asy3eTqem2y7xORRUc/edit" target="_blank" rel="noopener" style="font-size:calc(clamp(0.68rem,1.05vw,0.88rem) * var(--font-scale)); padding:0.22em 0.6em">&#9654; open the LI SC sheet</a></p>
       </div>
       <div class="col-img reveal sheet-fig sheet-slot" data-rings="b9:red" style="max-width:min(44vw,600px)"></div>
     </div>
@@ -1103,100 +1079,31 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- ===========================================
-     THE STUDENT SHEET TEMPLATE
-     Cloned into every .sheet-slot at boot. Words come from
-     Student Sheet content.md and are never written twice.
+     THE STUDENT SHEET
+     The exported page itself, assets/sheet.png, cloned into every
+     .sheet-slot at boot, so the deck can never word the sheet
+     differently from the paper in the students\' hands.
+     The spans are the ring zones: percentage rectangles measured off
+     that same export, ids b1 to b10 plus the four Success Criteria rows.
      =========================================== -->
 <template id="sheetTpl">
   <div class="sheet">
-    <div class="sh-box b1 sh-head">
-      <span><b>Week 1 Day 1 : Welcome to ICT, and what the next two weeks look like</b></span>
-      <span>Student: <span class="rule" style="display:inline-block; width:6em"></span></span>
-    </div>
-    <div class="sh-secbar navy">START HERE &middot; WHAT WE ARE LEARNING</div>
-    <div class="sh-cols">
-      <div class="sh-col">
-        <div class="sh-box b2">
-          <span class="sh-h">LEARNING INTENTION</span>
-          <span class="sh-sub">What we are learning today and why:</span>
-          <span>We are learning to <i><b>explain</b></i> what you already think artificial intelligence is. We are also learning to <i><b>use</b></i> the routines this class runs on.</span>
-          <span class="sh-mini">Artificial intelligence (AI): computer software that learns patterns from huge amounts of information, then uses those patterns to make something new.</span>
-          <span class="sh-mini">Why: your starting view of AI is the thing we test and sharpen over the next two weeks. The routines mean every lesson starts itself, so the build time stays yours.</span>
-        </div>
-        <div class="sh-box b4">
-          <span class="sh-h">SKILLS AND ROLES</span>
-          <span>Skills focus today: listen well enough to say your partner's answer back. Also judge your own work honestly against the Success Criteria.</span>
-          <span>Your role today: table member. Everyone shares once before anyone shares twice.</span>
-        </div>
-      </div>
-      <div class="sh-col">
-        <div class="sh-box b3">
-          <span class="sh-h">SUCCESS CRITERIA</span>
-          <span class="sh-row b3r1"><i class="sh-num">1</i><span>I can <i><b>use</b></i> the entry routine on my own: line up alphabetically, sit to the plan, start the Do Now.</span><i class="sh-tick"></i></span>
-          <span class="sh-row b3r2"><i class="sh-num">2</i><span>I can <i><b>explain</b></i> one place artificial intelligence already turns up in my life, and why it matters.</span><i class="sh-tick"></i></span>
-          <span class="sh-row b3r3"><i class="sh-num">3</i><span>I can <i><b>evaluate</b></i> my own work against Success Criteria 1 and 2, and tick honestly.</span><i class="sh-tick"></i></span>
-          <span class="sh-mini">Going further: I can <i><b>critique</b></i> one use of artificial intelligence that I think is not justified.</span>
-          <span class="sh-row b3r4"><i class="sh-num goal">4</i><span>Personal goal: <span class="rule"></span></span><i class="sh-tick"></i></span>
-        </div>
-      </div>
-    </div>
-    <div class="sh-secbar gold">THE WORK &middot; DO NOW, HINT, CHALLENGE</div>
-    <div class="sh-cols">
-      <div class="sh-col">
-        <div class="sh-box b5">
-          <span class="sh-h">DO NOW: My Top Three</span>
-          <span>Write your own Top 3 first, on your own, in silence. Your table agrees one Top 3 after.</span>
-          <span class="sh-mini">Category: the technology you would not want to live without.</span>
-          <span class="sh-row"><i class="sh-tick"></i><span>1 &nbsp;My number one, and one reason why: <span class="rule"></span><span class="rule"></span></span></span>
-          <span class="sh-row"><i class="sh-tick"></i><span>2 &nbsp;My number two: <span class="rule"></span></span></span>
-          <span class="sh-row"><i class="sh-tick"></i><span>3 &nbsp;My number three: <span class="rule"></span></span></span>
-        </div>
-        <div class="sh-box b6">
-          <span class="sh-h">HINT (stuck on the Do Now?)</span>
-          <span>Think about your last 24 hours. What did you switch on, pick up or open first?</span>
-        </div>
-      </div>
-      <div class="sh-col">
-        <div class="sh-box b7">
-          <span class="sh-h">CHALLENGE (finished the Do Now?)</span>
-          <span>Connect your three. Write one sentence that is true for all three of your choices.</span>
-          <span class="rule"></span><span class="rule"></span>
-        </div>
-        <div class="sh-box b8">
-          <span class="sh-h">SUPER CHALLENGE</span>
-          <span class="sh-mini">Only once every activity in the lesson is finished.</span>
-          <span>On your own device, research one real use of artificial intelligence. Then <i><b>critique</b></i> it. Write three things: the use you found, what could go wrong, and what a person still has to do.</span>
-          <span class="sh-mini">Hand it to Mr Igor, or post it in Google Classroom once you have joined.</span>
-          <span class="rule"></span><span class="rule"></span><span class="rule"></span><span class="rule"></span>
-        </div>
-      </div>
-    </div>
-    <div class="sh-secbar red">END OF LESSON &middot; BEFORE YOU LEAVE</div>
-    <div class="sh-cols">
-      <div class="sh-col">
-        <div class="sh-box b9">
-          <span class="sh-h">EXIT TICKET</span>
-          <span>Q1 &nbsp;Write one thing you now know about how this class runs.</span>
-          <span class="rule"></span><span class="rule"></span>
-          <span>Q2 &nbsp;Write one thing you already think about artificial intelligence.</span>
-          <span class="rule"></span><span class="rule"></span>
-          <span class="sh-mini">BEFORE YOU STAND: DESKS BACK TO THE 2 DESK FORMAT, CHAIRS IN, NOTHING LEFT BEHIND.</span>
-        </div>
-      </div>
-      <div class="sh-col">
-        <div class="sh-box b10">
-          <span class="sh-h">SELF-BAROMETER</span>
-          <span class="sh-sub">Tick where you are</span>
-          <span class="sh-bar">
-            <div><b>1</b>Not Confident<br>Needs support<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-            <div><b>2</b>Basic<br>Needs guidance<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-            <div><b>3</b>Developing<br>With reminders<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-            <div><b>4</b>Confident<br>Independent<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-            <div><b>5</b>Mastered<br>Can teach others<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
-          </span>
-        </div>
-      </div>
-    </div>
+    <img class="sheet-img" src="assets/sheet.png"
+         alt="The Week 1 Day 1 student sheet: header, Learning Intention, Success Criteria, Skills and Roles, Do Now, Hint, Challenge, Super Challenge, Exit Ticket, Self-Barometer">
+    <span class="sh-zone b1"   style="--l:2.00%;  --t:2.40%;  --w:83.60%; --h:6.31%"></span>
+    <span class="sh-zone b2"   style="--l:2.78%;  --t:15.06%; --w:45.83%; --h:14.81%"></span>
+    <span class="sh-zone b3"   style="--l:2.78%;  --t:31.36%; --w:45.83%; --h:20.25%"></span>
+    <span class="sh-zone row b3r1" style="--l:3.30%; --t:36.09%; --w:44.80%; --h:3.73%"></span>
+    <span class="sh-zone row b3r2" style="--l:3.30%; --t:40.00%; --w:44.80%; --h:3.73%"></span>
+    <span class="sh-zone row b3r3" style="--l:3.30%; --t:43.91%; --w:44.80%; --h:3.73%"></span>
+    <span class="sh-zone row b3r4" style="--l:3.30%; --t:47.82%; --w:44.80%; --h:3.73%"></span>
+    <span class="sh-zone b4"   style="--l:2.78%;  --t:53.08%; --w:45.83%; --h:13.83%"></span>
+    <span class="sh-zone b5"   style="--l:51.39%; --t:15.06%; --w:45.83%; --h:21.24%"></span>
+    <span class="sh-zone b6"   style="--l:51.39%; --t:37.78%; --w:45.83%; --h:12.84%"></span>
+    <span class="sh-zone b7"   style="--l:51.39%; --t:52.11%; --w:45.83%; --h:12.84%"></span>
+    <span class="sh-zone b8"   style="--l:2.78%;  --t:72.44%; --w:45.83%; --h:13.51%"></span>
+    <span class="sh-zone b9"   style="--l:51.39%; --t:72.44%; --w:45.83%; --h:13.51%"></span>
+    <span class="sh-zone b10"  style="--l:7.74%;  --t:86.67%; --w:89.16%; --h:6.92%"></span>
   </div>
 </template>
 
@@ -1228,7 +1135,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
    Any deck push bumps DECK_VERSION (push-update.sh does it automatically), which purges
    stored edits so a stale edit can never be restored over a restructured deck.
    Everything else (font scale, teacher toggle, iSAMS state, timers) stays session-only. */
-const DECK_VERSION = 'v20260831-202338';
+const DECK_VERSION = 'v20260831-210106';
 const EDIT_KEY = 'g10w1-edits:' + DECK_VERSION;
 try { Object.keys(localStorage).forEach(k => { if (k !== EDIT_KEY) localStorage.removeItem(k); }); } catch (e) {}
 
@@ -1246,15 +1153,37 @@ function buildSheets() {
     const spec = (slot.dataset.rings || '').split(',').map(s => s.trim()).filter(Boolean);
     if (!spec.length) return;
     sheet.classList.add('has-ring');
+    const holes = [];
     spec.forEach(s => {
       const parts = s.split(':');
       const el = sheet.querySelector('.' + parts[0]);
-      if (el) el.classList.add('ringed', 'ring-' + (parts[1] || 'red'));
+      if (!el) return;
+      el.classList.add('ringed', 'ring-' + (parts[1] || 'red'));
+      holes.push(['--l', '--t', '--w', '--h'].map(v => parseFloat(el.style.getPropertyValue(v))));
     });
-    sheet.querySelectorAll('.sh-box').forEach(b => {
-      if (!b.classList.contains('ringed') && !b.querySelector('.ringed')) b.classList.add('dim');
-    });
+    if (holes.length) sheet.insertBefore(buildWash(holes), sheet.querySelector('.sh-zone'));
   });
+}
+
+/* The wash is one path: the whole page, with every ringed rectangle punched
+   back out of it (evenodd), so the ringed boxes stay at full strength and
+   everything else fades to paper exactly once. */
+function buildWash(holes) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('class', 'sheet-wash');
+  svg.setAttribute('viewBox', '0 0 100 100');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('aria-hidden', 'true');
+  let d = 'M0 0H100V100H0Z';
+  holes.forEach(h => { d += ' M' + h[0] + ' ' + h[1] + 'H' + (h[0] + h[2]) + 'V' + (h[1] + h[3]) + 'H' + h[0] + 'Z'; });
+  const path = document.createElementNS(NS, 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('fill-rule', 'evenodd');
+  path.setAttribute('fill', '#FFFDF6');
+  path.setAttribute('opacity', '0.66');
+  svg.appendChild(path);
+  return svg;
 }
 
 /* How far a slide's content pokes out past its own box, top and bottom.
@@ -1918,6 +1847,14 @@ new InlineEditor(presentation);
 fitAll();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitAll());
 setTimeout(fitAll, 900);
+/* The sheet page is an image. Its box is reserved by aspect-ratio so nothing
+   jumps, and one more measure runs the moment the file actually lands. */
+(function () {
+  const imgs = Array.from(document.querySelectorAll('.sheet-img'));
+  if (!imgs.length || imgs.every(i => i.complete)) return;
+  imgs[0].addEventListener('load', fitAll, { once: true });
+  imgs[0].addEventListener('error', () => console.error('sheet image failed to load: assets/sheet.png'), { once: true });
+})();
 let fitTimer = null;
 window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitAll, 160); });
 
