@@ -275,8 +275,10 @@ body.scaled-up .col-img { display:none; }
   box-shadow:0 0 0 var(--px) var(--panel), 10px 10px 0 rgba(0,0,0,.4); }
 
 /* poster, shown as big as the slide allows */
-.poster-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:clamp(0.4rem,1.6vw,1.2rem); position:relative; z-index:3; }
-.poster-wrap img { max-height:76vh; max-width:92vw; object-fit:contain; background:#fff;
+/* the poster clears the top chrome the same way a slide-content does */
+.poster-wrap { flex:1; display:flex; align-items:center; justify-content:center;
+  padding:clamp(0.4rem,1.6vw,1.2rem); padding-top:clamp(64px, 9.5vh, 100px); position:relative; z-index:3; }
+.poster-wrap img { max-height:72vh; max-width:92vw; object-fit:contain; background:#fff;
   box-shadow:0 0 0 var(--px) var(--panel-2), 12px 12px 0 rgba(0,0,0,.35); }
 
 /* ===========================================
@@ -570,9 +572,6 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 
 <!-- 6 · Poster 12, big at the point of use -->
 <section class="slide g-paper" data-notes="<strong>Poster 12, about 30 seconds.</strong> Point at the wall copy in the room while this is up. My Top Three is a PIES task: everyone thinks alone first, everyone shares before anyone shares twice, and the group has to build one answer out of at least three people's ideas. Leave it up while the tables negotiate on the next slide.">
-  <div style="position:relative; z-index:3; text-align:center; padding:clamp(0.5rem,2vh,1.1rem) 1rem 0">
-    <span class="chip dark">POSTER 12 &middot; MY TOP THREE &middot; how the table part works</span>
-  </div>
   <div class="poster-wrap">
     <img src="assets/poster-12.jpg" alt="Poster 12: My Top Three, a cooperative learning activity built on PIES">
   </div>
@@ -1161,7 +1160,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
    Any deck push bumps DECK_VERSION (push-update.sh does it automatically), which purges
    stored edits so a stale edit can never be restored over a restructured deck.
    Everything else (font scale, teacher toggle, iSAMS state, timers) stays session-only. */
-const DECK_VERSION = 'v20260831-180014';
+const DECK_VERSION = 'v20260831-180546';
 const EDIT_KEY = 'g10w1-edits:' + DECK_VERSION;
 try { Object.keys(localStorage).forEach(k => { if (k !== EDIT_KEY) localStorage.removeItem(k); }); } catch (e) {}
 
