@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Week 1 Lesson 1 · Grade 10 ICT · Mr Igor</title>
+
+<!-- Fonts: Press Start 2P (chunky pixel display), VT323 (arcade readout), Inter (readable body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Inter:wght@400;600;800&display=swap">
+
+<style>
+/* ===========================================
+   THEME: TETRIS RETRO ARCADE (Igor named it, 31 Aug 2026)
+   Built for this deck: the seven tetromino colours tuned down for a
+   projector, a playfield well behind the content, drifting pieces,
+   a soft CRT scanline and vignette. All CSS drawn, no game assets.
+   =========================================== */
+:root {
+  /* the seven pieces, desaturated a step so white text holds on a projector */
+  --p-i:#4DD9E6;   /* I cyan   */
+  --p-j:#4A7BE8;   /* J blue   */
+  --p-l:#F0932B;   /* L orange */
+  --p-o:#F2C744;   /* O yellow */
+  --p-s:#5DD35D;   /* S green  */
+  --p-t:#B45CE0;   /* T purple */
+  --p-z:#E85555;   /* Z red    */
+
+  --well:#0B0E1A;         /* the playfield, deepest ground */
+  --well-2:#111731;
+  --panel:#151B2E;        /* raised panel */
+  --panel-2:#1D2540;
+  --grid:#242C4A;         /* faint well lines */
+  --edge:#05070E;         /* hard pixel edge */
+  --paper:#F6F2E7;        /* printed sheet */
+  --ink:#16181F;
+  --mist:#C7CEE3;         /* muted body text on dark */
+
+  /* ring code, taught to the class and used everywhere */
+  --ring-red:var(--p-z);
+  --ring-green:var(--p-s);
+  --ring-gold:var(--p-o);
+
+  --px:4px;               /* the pixel unit every bevel is built from */
+
+  --font-display:'Press Start 2P', monospace;
+  --font-label:'VT323', monospace;
+  --font-body:'Inter', system-ui, -apple-system, sans-serif;
+
+  --font-scale:1;
+  --title-size:calc(clamp(1.25rem, 3.4vw, 2.5rem) * var(--font-scale));
+  --h2-size:calc(clamp(0.92rem, 2.3vw, 1.55rem) * var(--font-scale));
+  --h3-size:calc(clamp(0.78rem, 1.7vw, 1.1rem) * var(--font-scale));
+  --body-size:calc(clamp(0.82rem, 1.5vw, 1.15rem) * var(--font-scale));
+  --label-size:calc(clamp(1.05rem, 1.9vw, 1.5rem) * var(--font-scale));
+  --small-size:calc(clamp(0.66rem, 1vw, 0.9rem) * var(--font-scale));
+
+  --slide-padding:clamp(1rem, 4vw, 4rem);
+  --content-gap:clamp(0.5rem, 2vw, 2rem);
+  --element-gap:clamp(0.25rem, 1vw, 1rem);
+  --ease-out-expo:cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-normal:0.6s;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+
+/* ===========================================
+   VIEWPORT FITTING: MANDATORY BASE (viewport-base.css, baked in full)
+   =========================================== */
+html, body { height:100%; overflow-x:hidden; }
+html { scroll-snap-type:y mandatory; scroll-behavior:smooth; }
+.slide {
+  width:100vw; height:100vh; height:100dvh;
+  overflow:hidden; scroll-snap-align:start;
+  display:flex; flex-direction:column; position:relative;
+}
+.slide-content {
+  flex:1; display:flex; flex-direction:column; justify-content:center;
+  max-height:100%; overflow:hidden; padding:var(--slide-padding);
+  /* top gutter keeps the timer pill and the iSAMS pop-up off the slide's own words */
+  padding-top:max(var(--slide-padding), clamp(64px, 9.5vh, 100px));
+  max-width:1180px; margin:0 auto; width:100%; position:relative; z-index:3;
+}
+.card, .container, .content-box { max-width:min(90vw, 1000px); max-height:min(80vh, 700px); }
+.feature-list, .bullet-list { gap:clamp(0.4rem, 1vh, 1rem); }
+.feature-list li, .bullet-list li { font-size:var(--body-size); line-height:1.4; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap:clamp(0.5rem, 1.5vw, 1rem); }
+img, .image-container { max-width:100%; max-height:min(50vh, 400px); object-fit:contain; }
+@media (max-height:700px) {
+  :root { --slide-padding:clamp(0.75rem, 3vw, 2rem); --content-gap:clamp(0.4rem, 1.5vw, 1rem);
+          --title-size:calc(clamp(1.1rem, 3vw, 2rem) * var(--font-scale));
+          --h2-size:calc(clamp(0.85rem, 2vw, 1.3rem) * var(--font-scale)); }
+}
+@media (max-height:600px) {
+  :root { --slide-padding:clamp(0.5rem, 2.5vw, 1.5rem); --content-gap:clamp(0.3rem, 1vw, 0.75rem);
+          --body-size:calc(clamp(0.72rem, 1.2vw, 0.98rem) * var(--font-scale)); }
+  .nav-dots, .keyboard-hint, .decorative { display:none; }
+}
+@media (max-height:500px) {
+  :root { --slide-padding:clamp(0.4rem, 2vw, 1rem);
+          --title-size:calc(clamp(1rem, 2.6vw, 1.5rem) * var(--font-scale)); }
+}
+@media (max-width:600px) {
+  :root { --title-size:calc(clamp(1.1rem, 6vw, 2.2rem) * var(--font-scale)); }
+  .grid { grid-template-columns:1fr; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.2s !important; }
+  html { scroll-behavior:auto; }
+  .tetfall { display:none; }
+}
+
+/* ===========================================
+   THE ARCADE CABINET: body, well, scanlines, vignette
+   =========================================== */
+body { font-family:var(--font-body); font-size:var(--body-size); color:#F2F5FF; background:var(--well); }
+
+/* the playfield well: a faint 40px block grid behind everything */
+.g-well, .g-stack, .g-panel, .g-arcade { background:var(--well); }
+.g-well::before, .g-stack::before, .g-panel::before, .g-arcade::before {
+  content:""; position:absolute; inset:0; z-index:0; opacity:.55;
+  background-image:linear-gradient(var(--grid) 1px, transparent 1px),
+                   linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 42%, #000 20%, transparent 78%);
+          mask-image:radial-gradient(ellipse at 50% 42%, #000 20%, transparent 78%);
+}
+.g-panel { background:linear-gradient(160deg, var(--panel-2) 0%, var(--well) 70%); }
+.g-arcade { background:radial-gradient(ellipse at 50% 35%, var(--well-2) 0%, var(--well) 62%, #05070E 100%); }
+.g-stack { background:var(--well); }
+/* a settled stack of blocks along the floor, like a game in progress */
+.g-stack::after {
+  content:""; position:absolute; left:0; right:0; bottom:0; height:clamp(34px, 7vh, 76px); z-index:1; opacity:.85;
+  background:
+    linear-gradient(90deg,
+      var(--p-i) 0 8%, var(--p-o) 8% 16%, var(--p-t) 16% 22%, var(--p-s) 22% 33%,
+      var(--p-z) 33% 41%, var(--p-j) 41% 52%, var(--p-l) 52% 58%, var(--p-o) 58% 67%,
+      var(--p-s) 67% 74%, var(--p-i) 74% 83%, var(--p-z) 83% 90%, var(--p-t) 90% 100%);
+  -webkit-mask-image:linear-gradient(transparent, #000 65%);
+          mask-image:linear-gradient(transparent, #000 65%);
+}
+.g-stack .slide-content { padding-bottom:clamp(3rem, 10vh, 6rem); }
+.g-paper { background:var(--paper); color:var(--ink); }
+.g-paper::before {
+  content:""; position:absolute; inset:0; z-index:0; opacity:.5;
+  background-image:linear-gradient(#E2DBC8 1px, transparent 1px), linear-gradient(90deg, #E2DBC8 1px, transparent 1px);
+  background-size:44px 44px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 40%, #000 10%, transparent 72%);
+          mask-image:radial-gradient(ellipse at 50% 40%, #000 10%, transparent 72%);
+}
+.g-paper h1, .g-paper h2 { color:var(--ink); text-shadow:3px 3px 0 #DCD3BC; }
+.g-paper .eyebrow { color:#8A6A12; }
+.g-paper .lede { color:#3A3D48; text-shadow:none; }
+.g-paper .tblock { background:#FFFDF6; color:var(--ink); }
+.g-paper .tblock b { color:#2B2E38; }
+/* the dark card styles have to flip on the paper slides or they go ink on ink */
+.g-paper ul.steps li, .g-paper ul.plain li { background:#FFFDF6; color:var(--ink); }
+.g-paper ul.steps li b, .g-paper ul.plain li b { color:#2B2E38; }
+.g-paper ul.plain li::before { color:#1E7F8C; }
+.g-paper .small { color:#5A5F70; }
+
+/* CRT: scanlines behind the content, soft vignette above it */
+.crt-lines { position:fixed; inset:0; z-index:2; pointer-events:none; opacity:.34;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,.55) 0 1px, transparent 1px 4px); }
+.crt-glow { position:fixed; inset:0; z-index:320; pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%, transparent 52%, rgba(0,0,0,.42) 100%); }
+
+/* drifting tetrominoes, drawn from one square plus three shadows */
+.tetfall { position:absolute; z-index:1; --tc:clamp(11px, 1.5vw, 20px);
+  width:var(--tc); height:var(--tc); background:currentColor; opacity:.14;
+  animation:tetdrop linear infinite; }
+.tetfall.I { box-shadow:var(--tc) 0 0 currentColor, calc(var(--tc)*2) 0 0 currentColor, calc(var(--tc)*3) 0 0 currentColor; color:var(--p-i); }
+.tetfall.O { box-shadow:var(--tc) 0 0 currentColor, 0 var(--tc) 0 currentColor, var(--tc) var(--tc) 0 currentColor; color:var(--p-o); }
+.tetfall.T { box-shadow:var(--tc) 0 0 currentColor, calc(var(--tc)*2) 0 0 currentColor, var(--tc) var(--tc) 0 currentColor; color:var(--p-t); }
+.tetfall.J { box-shadow:0 var(--tc) 0 currentColor, var(--tc) var(--tc) 0 currentColor, calc(var(--tc)*2) var(--tc) 0 currentColor; color:var(--p-j); }
+.tetfall.L { box-shadow:0 var(--tc) 0 currentColor, 0 calc(var(--tc)*2) 0 currentColor, var(--tc) calc(var(--tc)*2) 0 currentColor; color:var(--p-l); }
+.tetfall.S { box-shadow:var(--tc) 0 0 currentColor, calc(var(--tc)*-1) var(--tc) 0 currentColor, 0 var(--tc) 0 currentColor; color:var(--p-s); }
+.tetfall.Z { box-shadow:var(--tc) 0 0 currentColor, var(--tc) var(--tc) 0 currentColor, calc(var(--tc)*2) var(--tc) 0 currentColor; color:var(--p-z); }
+@keyframes tetdrop {
+  from { transform:translateY(-24vh) rotate(0deg); }
+  to   { transform:translateY(124vh) rotate(180deg); }
+}
+
+/* ===========================================
+   TYPE
+   =========================================== */
+h1 { font-family:var(--font-display); font-size:var(--title-size); line-height:1.5; color:#fff;
+     text-shadow:0 var(--px) 0 var(--edge), 0 0 26px rgba(77,217,230,.30); text-wrap:balance; letter-spacing:.02em; }
+h2 { font-family:var(--font-display); font-size:var(--h2-size); line-height:1.6; color:#fff;
+     text-shadow:0 3px 0 var(--edge); margin-bottom:var(--content-gap); text-wrap:balance; }
+.eyebrow { font-family:var(--font-label); font-size:var(--label-size); color:var(--p-o); margin-bottom:0.35em; letter-spacing:.04em; }
+.lede { font-family:var(--font-label); font-size:var(--label-size); color:#E8EEFF; line-height:1.35; }
+.small { font-size:var(--small-size); color:var(--mist); }
+.verb { font-weight:800; font-style:italic; }
+b, strong { font-weight:800; }
+
+/* ===========================================
+   BLOCKS: every card is a tetromino cell
+   =========================================== */
+.tblock {
+  background:var(--panel); color:#EEF2FF; padding:clamp(0.55rem,1.5vw,1.05rem) clamp(0.7rem,1.7vw,1.2rem);
+  border-radius:0; font-size:var(--body-size); line-height:1.45;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.45),
+             inset var(--px) var(--px) 0 rgba(255,255,255,.14);
+}
+.tblock b { color:#fff; }
+.tblock.i { border-left:var(--px) solid var(--p-i); }
+.tblock.o { border-left:var(--px) solid var(--p-o); }
+.tblock.s { border-left:var(--px) solid var(--p-s); }
+.tblock.z { border-left:var(--px) solid var(--p-z); }
+.tblock.t { border-left:var(--px) solid var(--p-t); }
+.tblock.j { border-left:var(--px) solid var(--p-j); }
+.tblock.l { border-left:var(--px) solid var(--p-l); }
+.tblock.solid-o { background:var(--p-o); color:var(--ink); }
+.tblock.solid-o b { color:var(--ink); }
+.tblock.quote { background:transparent; box-shadow:none; border-left:6px solid var(--p-o);
+  font-family:var(--font-label); font-size:calc(clamp(1.2rem,2.6vw,2rem) * var(--font-scale)); color:#FFE9A8; }
+
+.chip { display:inline-block; font-family:var(--font-label); font-size:var(--label-size);
+  background:var(--p-o); color:var(--ink); padding:0.08em 0.62em; letter-spacing:.03em;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.28), inset var(--px) var(--px) 0 rgba(255,255,255,.34); }
+.chip.dark { background:var(--panel); color:var(--p-i); }
+.chip.red  { background:var(--p-z); color:#fff; }
+.chip.green{ background:var(--p-s); color:var(--ink); }
+.chip.big  { font-family:var(--font-display); font-size:calc(clamp(1rem,2.6vw,1.9rem) * var(--font-scale));
+             padding:0.34em 0.6em; letter-spacing:.05em; line-height:1.4; }
+
+.linkbtn { display:inline-flex; align-items:center; gap:0.5em; background:var(--p-i); color:var(--ink);
+  font-family:var(--font-label); font-size:calc(clamp(1.1rem,2.1vw,1.55rem) * var(--font-scale));
+  padding:0.3em 0.8em; text-decoration:none; font-weight:700;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.32), inset var(--px) var(--px) 0 rgba(255,255,255,.4); }
+.linkbtn:hover { filter:brightness(1.1); }
+.linkbtn.gold { background:var(--p-o); }
+
+ul.steps { list-style:none; display:flex; flex-direction:column; gap:var(--element-gap); counter-reset:st; }
+ul.steps li { counter-increment:st; background:var(--panel); padding:0.5em 0.8em 0.5em 2.6em; position:relative;
+  font-size:var(--body-size); line-height:1.45;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.45), inset var(--px) var(--px) 0 rgba(255,255,255,.12); }
+ul.steps li::before { content:counter(st); position:absolute; left:0; top:0; bottom:0; width:2em;
+  display:flex; align-items:center; justify-content:center; font-family:var(--font-display);
+  font-size:0.8em; background:var(--p-i); color:var(--ink); }
+ul.steps li:nth-child(2)::before { background:var(--p-o); }
+ul.steps li:nth-child(3)::before { background:var(--p-s); }
+ul.steps li:nth-child(4)::before { background:var(--p-t); }
+ul.steps li:nth-child(5)::before { background:var(--p-z); }
+ul.steps li:nth-child(6)::before { background:var(--p-j); }
+
+ul.plain { list-style:none; display:flex; flex-direction:column; gap:var(--element-gap); }
+ul.plain li { background:var(--panel); padding:0.5em 0.85em; font-size:var(--body-size); line-height:1.45;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.45), inset var(--px) var(--px) 0 rgba(255,255,255,.12); }
+ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
+
+.two-col { display:grid; grid-template-columns:1fr auto; gap:clamp(0.9rem,2.6vw,2.2rem); align-items:center; }
+.two-col.img-left { grid-template-columns:auto 1fr; }
+@media (max-width:900px) { .two-col { grid-template-columns:1fr; } .col-img { display:none; } }
+@media (max-height:620px) { .col-img { display:none; } }
+body.scaled-up .col-img { display:none; }
+
+.line-order { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(3,1fr); gap:4px; counter-reset:lq; }
+.line-order li { counter-increment:lq; background:var(--paper); color:var(--ink); font-family:var(--font-label);
+  font-size:calc(clamp(0.9rem,1.5vw,1.2rem) * var(--font-scale)); padding:0.1em 0.45em;
+  box-shadow:inset -2px -2px 0 rgba(0,0,0,.2); }
+.line-order li::before { content:counter(lq) " "; color:var(--p-z); font-weight:700; }
+
+.photo { box-shadow:0 0 0 var(--px) var(--panel), 10px 10px 0 rgba(0,0,0,.4); background:#000; }
+.portrait { max-height:min(46vh,340px); width:auto; background:#fff;
+  box-shadow:0 0 0 var(--px) var(--p-i), 10px 10px 0 rgba(0,0,0,.4); }
+.photo-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr)); gap:clamp(6px,1vw,12px); }
+.photo-grid figure { display:flex; flex-direction:column; gap:4px; }
+.photo-grid img { width:100%; height:clamp(90px,17vh,170px); object-fit:cover; max-height:none;
+  box-shadow:0 0 0 3px var(--panel), 6px 6px 0 rgba(0,0,0,.4); }
+.photo-grid figcaption { font-family:var(--font-label); font-size:calc(clamp(0.9rem,1.4vw,1.15rem) * var(--font-scale)); color:var(--p-o); line-height:1.15; }
+.wide-img { align-self:center; max-width:min(92vw,1180px); }
+.wide-img img { width:100%; max-height:min(56vh,440px); object-fit:contain;
+  box-shadow:0 0 0 var(--px) var(--panel), 10px 10px 0 rgba(0,0,0,.4); }
+
+/* poster, shown as big as the slide allows */
+.poster-wrap { flex:1; display:flex; align-items:center; justify-content:center; padding:clamp(0.4rem,1.6vw,1.2rem); position:relative; z-index:3; }
+.poster-wrap img { max-height:76vh; max-width:92vw; object-fit:contain; background:#fff;
+  box-shadow:0 0 0 var(--px) var(--panel-2), 12px 12px 0 rgba(0,0,0,.35); }
+
+/* ===========================================
+   THE STUDENT SHEET, rebuilt from Student Sheet content.md.
+   One template, cloned into every point of use, so the deck and the
+   printed sheet can never drift apart. Rings mark the exact box.
+   =========================================== */
+.sheet { background:var(--paper); color:var(--ink); width:100%; padding:clamp(5px,0.7vw,10px);
+  display:flex; flex-direction:column; gap:clamp(3px,0.4vw,6px);
+  box-shadow:0 0 0 var(--px) var(--panel-2), 10px 10px 0 rgba(0,0,0,.35);
+  font-size:calc(clamp(0.4rem, 0.72vw, 0.62rem) * var(--font-scale)); line-height:1.3; }
+.sheet-fig { position:relative; align-self:center; width:100%; max-width:min(52vw, 640px); }
+.sheet-fig.big { max-width:min(94vw, 1400px); }
+.sheet-fig.big .sheet { font-size:calc(clamp(0.55rem, 1.05vw, 0.9rem) * var(--font-scale)); }
+/* fitSheets() scales the sheet down by exactly the amount a slide overruns,
+   so it is always as big as that slide allows and never clipped */
+.sheet { transform-origin:top center; }
+.sh-box { background:#FFFDF6; border:2px solid #C9BFA4; padding:clamp(3px,0.45vw,7px); position:relative;
+  display:flex; flex-direction:column; gap:2px; transition:opacity .3s ease; }
+.sh-h { font-family:var(--font-display); font-size:0.82em; color:#1F2430; letter-spacing:.01em; line-height:1.5; }
+.sh-sub { font-style:italic; color:#5A5F70; }
+.sh-cols { display:grid; grid-template-columns:1fr 1fr; gap:clamp(3px,0.4vw,6px); }
+.sh-col { display:flex; flex-direction:column; gap:clamp(3px,0.4vw,6px); }
+.sh-band { display:grid; grid-template-columns:1fr 1fr; gap:clamp(3px,0.4vw,6px); }
+.sh-head { display:flex; justify-content:space-between; gap:8px; align-items:center; background:#EDE6D2; }
+.sh-row { display:flex; gap:5px; align-items:flex-start; }
+.sh-tick { flex:none; width:1.15em; height:1.15em; border:2px solid #6C7284; background:#fff; margin-top:1px; }
+.rule { display:block; border-bottom:1px solid #A9A08A; height:1.05em; }
+.sh-mini { font-size:0.88em; color:#4A4F60; }
+.sh-bar { display:grid; grid-template-columns:repeat(5,1fr); gap:3px; }
+.sh-bar div { text-align:center; border:1px solid #C9BFA4; padding:2px; background:#fff; }
+.sh-bar b { display:block; }
+.sheet .dim { opacity:.34; }
+
+.ringed::after { content:""; position:absolute; inset:-5px; border:4px solid var(--rc, var(--ring-red));
+  pointer-events:none; animation:ringpulse 1.35s ease-in-out infinite;
+  box-shadow:0 0 0 3px rgba(0,0,0,.18), 0 0 18px var(--rc, var(--ring-red)); }
+.ring-red   { --rc:var(--ring-red); }
+.ring-green { --rc:var(--ring-green); }
+.ring-gold  { --rc:var(--ring-gold); }
+.sh-row.ringed::after { inset:-3px; border-width:3px; }
+@keyframes ringpulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.03); opacity:.7; } }
+
+.ring-key { display:flex; flex-wrap:wrap; gap:0.5em 1.1em; font-family:var(--font-label);
+  font-size:calc(clamp(0.95rem,1.6vw,1.25rem) * var(--font-scale)); }
+.ring-key span { display:inline-flex; align-items:center; gap:0.4em; }
+.ring-key i { width:0.85em; height:0.85em; border:3px solid currentColor; display:inline-block; font-style:normal; }
+.k-red { color:var(--ring-red); } .k-green { color:var(--ring-green); } .k-gold { color:var(--ring-gold); }
+/* the piece colours are tuned for a dark well, so darken them on the paper slides */
+.g-paper .k-red { color:#B32B2B; } .g-paper .k-green { color:#2C7A2C; } .g-paper .k-gold { color:#9A6E00; }
+
+/* ===========================================
+   ANIMATION: entry reveals and click-through fragments
+   =========================================== */
+.reveal { opacity:0; transform:translateY(26px); transition:opacity var(--duration-normal) var(--ease-out-expo), transform var(--duration-normal) var(--ease-out-expo); }
+.slide.visible .reveal { opacity:1; transform:translateY(0); }
+.reveal:nth-child(1){transition-delay:.05s}.reveal:nth-child(2){transition-delay:.13s}
+.reveal:nth-child(3){transition-delay:.21s}.reveal:nth-child(4){transition-delay:.29s}
+.reveal:nth-child(5){transition-delay:.37s}.reveal:nth-child(6){transition-delay:.45s}
+[data-fragment] { opacity:0; transform:translateY(14px); transition:opacity .4s var(--ease-out-expo), transform .4s var(--ease-out-expo); pointer-events:none; }
+[data-fragment].fragment-visible { opacity:1; transform:translateY(0); pointer-events:auto; }
+
+/* teacher-only callouts */
+.tcall { background:#0F1424; color:#FFE9A8; font-family:var(--font-label); font-size:var(--label-size);
+  padding:0.35em 0.8em; border-left:6px solid var(--p-o); line-height:1.3; }
+.tcall::before { content:"teacher only \00B7 "; color:var(--p-o); }
+body.hide-teacher [data-teacher-only="true"] { display:none; }
+
+/* ===========================================
+   iSAMS REGISTER POP-UP: cannot be missed
+   =========================================== */
+.isams-pop { position:fixed; top:clamp(10px,3vh,26px); right:clamp(10px,2vw,26px); z-index:9600;
+  background:var(--p-z); color:#fff; font-family:var(--font-label);
+  font-size:calc(clamp(1.25rem,2.3vw,1.85rem) * var(--font-scale));
+  padding:0.45em 0.85em; display:none; align-items:center; gap:0.55em;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.32), inset var(--px) var(--px) 0 rgba(255,255,255,.28), 0 8px 30px rgba(0,0,0,.45);
+  animation:isamsIn .5s var(--ease-out-expo), isamsPulse 1.2s ease-in-out .5s infinite; }
+.isams-pop.show { display:inline-flex; }
+.isams-pop b { background:var(--p-o); color:var(--ink); padding:0 0.35em; }
+.isams-pop .isams-go { background:#fff; color:var(--p-z); text-decoration:none; font-family:inherit;
+  font-size:0.82em; padding:0.2em 0.5em; box-shadow:inset -2px -2px 0 rgba(0,0,0,.2); }
+.isams-pop .isams-done { background:var(--edge); color:#fff; border:0; font-family:inherit;
+  font-size:0.82em; padding:0.2em 0.5em; cursor:pointer; box-shadow:inset -2px -2px 0 rgba(0,0,0,.4); }
+@keyframes isamsIn { from { transform:translateY(-150%); } to { transform:none; } }
+@keyframes isamsPulse { 0%,100% { background:var(--p-z); } 50% { background:#F0932B; } }
+@media (prefers-reduced-motion:reduce) { .isams-pop { animation:none; } }
+
+/* ===========================================
+   COUNTDOWN TIMER PILL
+   =========================================== */
+.timer-pill { position:fixed; left:clamp(10px,2vw,26px); top:clamp(10px,3vh,26px); z-index:9500;
+  display:none; align-items:center; gap:0.5em; background:var(--panel); color:var(--p-i);
+  font-family:var(--font-label); font-size:calc(clamp(1.4rem,2.5vw,2.05rem) * var(--font-scale));
+  padding:0.28em 0.68em; cursor:pointer; border:0;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.45), inset var(--px) var(--px) 0 rgba(255,255,255,.12), 0 8px 30px rgba(0,0,0,.4); }
+.timer-pill.show { display:inline-flex; }
+.timer-pill.running { color:var(--p-o); }
+.timer-pill.urgent { color:#fff; background:var(--p-z); animation:isamsPulse 1s ease-in-out infinite; }
+.timer-pill .t-hint { font-size:0.45em; color:#9FAAC6; }
+
+/* ===========================================
+   TWO COINS: Heads and Tails brain break
+   =========================================== */
+.coin-row { display:flex; gap:clamp(1rem,4vw,3.2rem); justify-content:center; align-items:flex-start; flex-wrap:wrap; }
+.coin-slot { display:flex; flex-direction:column; align-items:center; gap:0.5em; }
+.coin-name { font-family:var(--font-display); font-size:calc(clamp(0.7rem,1.4vw,1rem) * var(--font-scale)); color:var(--p-i); }
+.coin { width:clamp(88px,13vw,158px); height:clamp(88px,13vw,158px); cursor:pointer; perspective:800px; border:0; background:none; padding:0; }
+.coin-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:transform 1.6s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.coin-face { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-size:clamp(0.62rem,1.3vw,1rem); color:var(--ink);
+  backface-visibility:hidden; background:var(--p-o);
+  box-shadow:inset -8px -8px 0 rgba(0,0,0,.28), inset 8px 8px 0 rgba(255,255,255,.4);
+  /* a pixel-art circle, so the coin reads as a coin without leaving the block look */
+  clip-path:polygon(31% 0, 69% 0, 69% 9%, 84% 9%, 84% 16%, 91% 16%, 91% 31%, 100% 31%,
+    100% 69%, 91% 69%, 91% 84%, 84% 84%, 84% 91%, 69% 91%, 69% 100%, 31% 100%,
+    31% 91%, 16% 91%, 16% 84%, 9% 84%, 9% 69%, 0 69%, 0 31%, 9% 31%,
+    9% 16%, 16% 16%, 16% 9%, 31% 9%); }
+.coin-face.tails { transform:rotateY(180deg); background:var(--p-i); }
+.coin-out { font-family:var(--font-display); font-size:calc(clamp(0.72rem,1.5vw,1.1rem) * var(--font-scale));
+  color:#fff; text-shadow:0 3px 0 var(--edge); min-height:1.8em; }
+.flip-both { font-family:var(--font-display); font-size:calc(clamp(0.72rem,1.5vw,1.1rem) * var(--font-scale));
+  background:var(--p-s); color:var(--ink); border:0; padding:0.7em 1.2em; cursor:pointer;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.32), inset var(--px) var(--px) 0 rgba(255,255,255,.4); }
+.flip-both:hover { filter:brightness(1.08); }
+
+/* ===========================================
+   CHROME: progress, dots, slide number, controls, notes
+   =========================================== */
+.progress-bar { position:fixed; top:0; left:0; height:5px; width:0; background:var(--p-i); z-index:330; }
+.nav-dots { position:fixed; right:clamp(6px,1vw,14px); top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:7px; z-index:330; }
+.nav-dots button { width:9px; height:9px; border:0; background:rgba(255,255,255,.25); cursor:pointer; padding:0; }
+.nav-dots button.active { background:var(--p-o); }
+.slide-num { position:fixed; right:clamp(10px,1.5vw,20px); bottom:clamp(8px,1.5vh,16px); z-index:9400;
+  font-family:var(--font-label); font-size:20px; background:var(--panel); color:var(--p-o); padding:2px 10px;
+  box-shadow:inset -3px -3px 0 rgba(0,0,0,.4); }
+.font-scale-ctrl { position:fixed; left:clamp(8px,1vw,16px); bottom:clamp(8px,1.5vh,16px); z-index:9500;
+  display:flex; align-items:center; gap:6px; background:var(--panel); padding:5px 8px;
+  font-family:var(--font-label); color:#fff; font-size:18px; box-shadow:inset -3px -3px 0 rgba(0,0,0,.4); }
+.fs-btn { border:0; background:#2A3350; color:#fff; font-family:var(--font-label); font-size:18px; padding:2px 9px; cursor:pointer; }
+.fs-btn:hover { background:#38436A; }
+.fs-btn:disabled { opacity:.35; cursor:default; }
+.fs-btn:focus-visible { outline:2px solid var(--p-i); }
+.ctrl-divider { width:1px; height:18px; background:rgba(255,255,255,.25); }
+.teacher-btn.off { opacity:.4; text-decoration:line-through; }
+.edit-btn.active { background:var(--p-o); color:var(--ink); }
+
+.speaker-notes-panel { position:fixed; bottom:clamp(0.8rem,2vh,1.5rem); left:50%; transform:translateX(-50%) translateY(150%);
+  width:min(940px,92vw); max-height:40vh; z-index:9000; background:rgba(10,13,24,0.97); color:#fff;
+  padding:clamp(0.8rem,1.5vw,1.2rem) clamp(1rem,2vw,1.5rem);
+  box-shadow:0 -10px 40px rgba(0,0,0,.5); font-size:clamp(0.78rem,1.2vw,0.96rem); line-height:1.55; overflow-y:auto;
+  transition:transform .35s var(--ease-out-expo); }
+.speaker-notes-panel.visible { transform:translateX(-50%) translateY(0); }
+.notes-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.5em; padding-bottom:.4em; border-bottom:1px solid rgba(255,255,255,.14); }
+.notes-label { font-weight:800; letter-spacing:.18em; text-transform:uppercase; font-family:var(--font-label); font-size:19px; color:var(--p-i); }
+.notes-counter { opacity:.55; }
+.notes-body strong { color:var(--p-o); }
+.notes-body .tag { display:inline-block; background:rgba(93,211,93,.55); color:#fff; padding:.1em .5em; font-size:.85em; font-weight:700; letter-spacing:.08em; margin-right:.4em; }
+.notes-body .tag.cfu { background:var(--p-z); }
+.notes-body .tag.tt  { background:var(--p-j); }
+.notes-hint { position:fixed; bottom:clamp(3rem,7vh,4rem); right:clamp(10px,1.5vw,20px);
+  font-family:var(--font-label); font-size:16px; letter-spacing:.05em; z-index:199;
+  background:rgba(21,27,46,.92); color:#DDE4F5; padding:.2em .7em; pointer-events:none; opacity:.8; }
+
+.edit-hotzone { position:fixed; top:0; left:0; width:80px; height:80px; z-index:10000; cursor:pointer; }
+.edit-toggle { position:fixed; top:12px; left:12px; z-index:10001; font-size:20px; background:var(--panel); color:#fff; border:0; padding:6px 10px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .3s ease; }
+.edit-toggle.show, .edit-toggle.active { opacity:1; pointer-events:auto; }
+body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outline-offset:2px; }
+
+#cursorFx { position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999; }
+</style>
+</head>
+<body>
+
+<div class="crt-lines" aria-hidden="true"></div>
+<div class="crt-glow" aria-hidden="true"></div>
+<div class="progress-bar"></div>
+<nav class="nav-dots" aria-label="Slide navigation"></nav>
+<canvas id="cursorFx" aria-hidden="true"></canvas>
+<div class="edit-hotzone"></div>
+<button class="edit-toggle" id="editToggle" title="Edit mode (E)">&#9999;&#65039;</button>
+<div class="slide-num" id="slideNum">1 / 32</div>
+
+<div class="isams-pop" id="isamsPop" role="alert">&#9888; <b>iSAMS</b> DO THE REGISTER &middot; <span id="isamsWhen">final by 08:35</span>
+  <a class="isams-go" href="https://aissharjah.isamshosting.cloud/main/framework" target="_blank" rel="noopener">open iSAMS &#8599;</a>
+  <button class="isams-done" id="isamsDone" aria-label="Register done, dismiss reminder">&#10003; done</button>
+</div>
+
+<!-- ================= PERIOD 1 · 08:30 to 09:05 ================= -->
+
+<!-- 1 · Title -->
+<section class="slide g-arcade" data-notes="<strong>Threshold, 08:30.</strong> Stand at the door of IG04 as they arrive from IF05. Greet every student by name if you can, uniform and appearance glance before anyone comes in (Expectations s35), fixes go out before entry, not after. <strong>Presenter keys:</strong> N notes &middot; E edit (autosaves on this machine) &middot; F fullscreen &middot; &#8984;&#8679;H hides teacher callouts &middot; arrow keys move, and a slide with a task shows its timer top left. <strong>The red iSAMS pop-up arrives on slide 3 and follows every slide until you press &#10003; done.</strong>">
+  <div class="tetfall I" style="left:8%;  animation-duration:38s; animation-delay:-4s"></div>
+  <div class="tetfall T" style="left:24%; animation-duration:52s; animation-delay:-22s"></div>
+  <div class="tetfall O" style="left:71%; animation-duration:44s; animation-delay:-11s"></div>
+  <div class="tetfall S" style="left:88%; animation-duration:58s; animation-delay:-31s"></div>
+  <div class="slide-content">
+    <span class="chip reveal" style="align-self:flex-start">WEEK 1 &middot; LESSON 1 &middot; TUESDAY 1 SEPTEMBER</span>
+    <h1 class="reveal" style="margin-top:0.55em">WELCOME<br>TO <span style="color:var(--p-i)">ICT</span></h1>
+    <p class="lede reveal" style="margin-top:0.7em">Grade 10 &middot; 101ICTB &middot; Mr Igor &middot; Room IG04</p>
+    <p class="reveal" style="margin-top:0.7em; max-width:820px">Two weeks of artificial intelligence, ending with a working Tetris game built from a single prompt. Today we set the class up so none of that time gets lost.</p>
+    <p class="reveal" style="margin-top:1em"><span class="chip dark">PERIOD 1 &nbsp;08:30 to 09:05</span> &nbsp; <span class="chip dark">PERIOD 2 &nbsp;09:10 to 09:45</span></p>
+  </div>
+</section>
+
+<!-- 2 · Entry routine: line order + seating plan -->
+<section class="slide g-stack" data-notes="<strong>Entry routine, 08:30 to 08:36 (6 min).</strong> This is the routine for every lesson, so teach it properly once. Read the line order aloud, then walk them from IF05 to IG04 and let them find their own seat from the plan on screen. Bags away, sit to the plan, name on the sheet. <strong>Physical timetables are handed out this period</strong> (school instruction for Period 1 teachers on day 1), and the housekeeping slide next carries the reminder. <span class='tag cfu'>CFU</span> fist to five on each of the four steps. <strong>Uniform and appearance glance happens at the door, before entry, never after.</strong>">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// entry_routine</p>
+    <h2 class="reveal">Getting in: four moves, every lesson</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:640px">
+        <ul class="steps">
+          <li class="reveal"><b>Line up at IF05.</b> That is the room printed on your timetable, and it is where you wait.</li>
+          <li class="reveal"><b>Mr Igor collects you there</b> and walks the class over to IG04.</li>
+          <li class="reveal"><b>Enter IG04 in alphabetical order</b> by first name. Your order is on the right.</li>
+          <li class="reveal"><b>Bags away, sit to the plan, name on your sheet.</b> Then start the Do Now.</li>
+        </ul>
+        <p class="eyebrow reveal" style="margin-top:var(--element-gap)">// line_order (A to Z by first name)</p>
+        <ol class="line-order reveal">
+          <li>Abdulla A.</li><li>Ahmed A.</li><li>Hamdan A.</li>
+          <li>Hamed A.</li><li>Hessa A.</li><li>Mansoor B.</li>
+          <li>Reem A.</li><li>Vana K.</li><li>Yara N.</li>
+          <li>Yousef A.</li><li>Zayed A.</li>
+        </ol>
+        <div class="tblock o" data-fragment="1" style="margin-top:var(--element-gap)"><b>Self-check:</b> your number above is your place in the line. Say it to yourself when you get there. If two of you claim the same number, one of you is in the wrong spot.</div>
+      </div>
+      <div class="col-img reveal" style="max-width:min(46vw,700px)">
+        <img class="photo" src="assets/seating-initials.png" alt="Seating plan for IG04, showing each table and the initials of the student sitting there" style="width:100%; max-height:62vh">
+        <p class="small" style="margin-top:6px; font-family:var(--font-label); font-size:var(--label-size); color:var(--p-i)">the seating plan for IG04 &middot; find your table as you walk in</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · The lesson loop + housekeeping · iSAMS ARRIVES HERE -->
+<section class="slide g-panel" data-isams="true" data-notes="<strong>Housekeeping and the loop, about 1 min.</strong> Fast. This is the shape of every lesson in student words, and it is the slide that carries the register reminder and the timetable handout. <strong>The red iSAMS pop-up lands here and follows every slide until you press &#10003; done. One register for this double, final by 08:35.</strong> Open iSAMS with the link inside the pop-up. <span class='tag cfu'>CFU</span> fist to five: who can say the four steps back to me?">
+  <div class="slide-content">
+    <p class="eyebrow reveal">// how_every_lesson_runs</p>
+    <h2 class="reveal">The same loop, every lesson</h2>
+    <div class="grid">
+      <div class="tblock i reveal"><b>1 &middot; Do Now</b><br>Walk in, sit down, start. Nobody waits for me to begin.</div>
+      <div class="tblock o reveal"><b>2 &middot; Learn it</b><br>I show you the new thing, then we pull it apart together.</div>
+      <div class="tblock s reveal"><b>3 &middot; Build laps</b><br>You work, I circulate, we check against the criteria.</div>
+      <div class="tblock t reveal"><b>4 &middot; Prove it</b><br>Tick your sheet, exit ticket, barometer, out the door.</div>
+    </div>
+    <div class="tblock z reveal" style="margin-top:var(--content-gap)"><b>Today only:</b> your printed timetable is handed out in this period. Put it somewhere you will actually find it again.</div>
+    <div class="tcall reveal" data-teacher-only="true" style="margin-top:var(--element-gap)">one iSAMS register for this double, final by 08:35. Use the link in the red pop-up, then press done.</div>
+  </div>
+</section>
+
+<!-- 4 · The sheet, walked box by box -->
+<section class="slide g-paper" data-notes="<strong>Sheet walkthrough, about 2 min.</strong> Hand the printed sheets out NOW, one each, names on straight away. Walk it box by box on screen: header, Learning Intention, Success Criteria, Skills and Roles, Do Now, Hint, Challenge, Super Challenge, Exit Ticket, Self-Barometer. Teach the ring code out loud, because every later slide uses it. The sheet is handed in at the end and kept as their record. <span class='tag cfu'>CFU</span> cold call two students: where does your personal goal go? where do the Exit Ticket answers go?">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// your_control_panel</p>
+    <h2 class="reveal">This sheet is the spine of every lesson</h2>
+    <div class="sheet-fig big reveal sheet-slot" data-rings=""></div>
+    <div class="reveal" style="margin-top:var(--element-gap); display:flex; flex-wrap:wrap; gap:0.6em 1.4em; align-items:center">
+      <span class="chip">name on it &middot; handed in at the end &middot; kept as your record</span>
+      <div class="ring-key">
+        <span class="k-red"><i></i> red ring = Learning Intention and Exit Ticket</span>
+        <span class="k-green"><i></i> green ring = Success Criteria</span>
+        <span class="k-gold"><i></i> gold ring = anything you write for a task</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · Do Now, part 1: silent solo -->
+<section class="slide g-well" data-timer="240" data-timer-group="donow" data-notes="<strong>Do Now part 1, 4 min silent solo.</strong> Start the 4 minute timer top left. TLAC Do Now: they should already be writing before you say anything. Circulate, do not talk over them. The Hint is on the sheet in Box 6 and revealed on this slide with NEXT if anyone stalls. <strong>Below Level:</strong> the sentence starter stays on screen. <strong>Above Level:</strong> point them at the Challenge box as soon as they finish. Poster 12 is the next slide, and the wall copy is in the room.">
+  <div class="tetfall O" style="left:6%; animation-duration:46s; animation-delay:-9s"></div>
+  <div class="tetfall Z" style="left:93%; animation-duration:54s; animation-delay:-26s"></div>
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// do_now &middot; my_top_three</p>
+    <h2 class="reveal">Do Now: My Top Three</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:680px">
+        <div class="tblock o reveal"><b>Write your own Top 3 first, on your own, in silence. Your table agrees one Top 3 after.</b><br>Category: the technology you would not want to live without.</div>
+        <ul class="steps" style="margin-top:var(--element-gap)">
+          <li class="reveal">My number one, and one reason why.</li>
+          <li class="reveal">My number two.</li>
+          <li class="reveal">My number three.</li>
+        </ul>
+        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip red">4 minutes &middot; on your own &middot; silent &middot; on your sheet, Box 5</span></p>
+        <div class="tblock i reveal" style="margin-top:var(--element-gap)"><b>Stuck for a sentence?</b> Try: "I would not want to live without ... because ..."</div>
+        <div class="tblock s" data-fragment="1" style="margin-top:var(--element-gap)"><b>HINT (stuck on the Do Now?)</b><br>Think about your last 24 hours. What did you switch on, pick up or open first?</div>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b5:gold,b6:gold" style="max-width:min(44vw,600px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · Poster 12, big at the point of use -->
+<section class="slide g-paper" data-notes="<strong>Poster 12, about 30 seconds.</strong> Point at the wall copy in the room while this is up. My Top Three is a PIES task: everyone thinks alone first, everyone shares before anyone shares twice, and the group has to build one answer out of at least three people's ideas. Leave it up while the tables negotiate on the next slide.">
+  <div style="position:relative; z-index:3; text-align:center; padding:clamp(0.5rem,2vh,1.1rem) 1rem 0">
+    <span class="chip dark">POSTER 12 &middot; MY TOP THREE &middot; how the table part works</span>
+  </div>
+  <div class="poster-wrap">
+    <img src="assets/poster-12.jpg" alt="Poster 12: My Top Three, a cooperative learning activity built on PIES">
+  </div>
+  <div style="position:relative; z-index:3; text-align:center; padding:0 1rem clamp(0.5rem,2vh,1.2rem)">
+    <span class="chip">Poster 12 lives on our wall. Every group game in this room works the PIES way.</span>
+  </div>
+</section>
+
+<!-- 7 · Do Now, part 2: the table agrees -->
+<section class="slide g-well" data-timer="240" data-timer-group="donow" data-notes="<strong>Do Now part 2, 4 min table share, then 2 min Cold Call.</strong> The block clock carries over from the solo phase, so hit start again for the table share. Equal Participation is the rule that matters: everyone speaks once before anyone speaks twice. Circulate and listen for who is doing the negotiating. <span class='tag cfu'>CFU</span> Cold Call two tables with NEXT: their agreed Top 3, and whose idea each one was. That second half is the part that makes them listen.">
+  <div class="tetfall S" style="left:12%; animation-duration:50s; animation-delay:-14s"></div>
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// do_now &middot; table_agreement</p>
+    <h2 class="reveal">Now your table agrees one Top 3</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:680px">
+        <ul class="steps">
+          <li class="reveal">Everyone says their number one out loud, and the reason for it.</li>
+          <li class="reveal">Everyone shares once before anyone shares twice.</li>
+          <li class="reveal">The table agrees <b>one</b> Top 3, using ideas from at least three different people.</li>
+        </ul>
+        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip red">4 minutes &middot; at your table</span></p>
+        <div class="tblock z" data-fragment="1" style="margin-top:var(--element-gap)"><b>Cold Call, 2 minutes.</b> Two tables report their agreed Top 3, and say whose idea each one was. No hands up, I pick.</div>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b5:gold" style="max-width:min(44vw,600px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · Challenge -->
+<section class="slide g-well" data-notes="<strong>Challenge, for anyone finished.</strong> Word for word off the sheet, Box 7, two ruled lines. This is the SIP CONNECT verb: it is harder than writing three more items, which is the point. <strong>Above Level:</strong> they go straight here after the solo phase rather than waiting. Do not let anyone sit idle between the Do Now and the Learning Intention.">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// challenge</p>
+    <h2 class="reveal">Finished the Do Now? Take the Challenge</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:680px">
+        <div class="tblock o reveal" style="font-size:calc(clamp(0.95rem,1.9vw,1.4rem) * var(--font-scale))"><b>CHALLENGE (finished the Do Now?)</b><br>Connect your three. Write one sentence that is true for all three of your choices.</div>
+        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">two ruled lines, Box 7 on your sheet</span></p>
+        <div class="tblock i reveal" style="margin-top:var(--element-gap)">One sentence, not three. The harder it is to find something true of all three, the better your answer will be.</div>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b7:gold" style="max-width:min(44vw,600px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · Learning Intention -->
+<section class="slide g-panel" data-notes="<strong>Learning Intention, 08:46 to 08:49 (3 min).</strong> Read it aloud, then have two students read it back. The verbs are the doing words and they come from the Years 9 to 10 band: explain is AC9TDI10K02, use is AC9TDI10P11 and P12. Point at the red ring: this is Box 2 on their sheet, word for word. Define artificial intelligence here, on this slide, because it is the first time the class meets the term in this subject. <strong>Misconception to expect:</strong> AI thinks like a person. It predicts patterns from training data. Name it, park it, teach it properly next block.">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// learning_intention</p>
+    <h2 class="reveal">What we are learning today</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:700px">
+        <div class="tblock z reveal" style="font-size:calc(clamp(0.95rem,1.9vw,1.4rem) * var(--font-scale))">
+          We are learning to <span class="verb">explain</span> what you already think artificial intelligence is. We are also learning to <span class="verb">use</span> the routines this class runs on.
+        </div>
+        <div class="tblock i reveal" style="margin-top:var(--element-gap)">
+          <b>Artificial intelligence (AI):</b> computer software that learns patterns from huge amounts of information, then uses those patterns to make something new.
+        </div>
+        <div class="tblock o reveal" style="margin-top:var(--element-gap)">
+          <b>Why:</b> your starting view of AI is the thing we test and sharpen over the next two weeks. The routines mean every lesson starts itself, so the build time stays yours.
+        </div>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b2:red" style="max-width:min(44vw,600px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · Success Criteria -->
+<section class="slide g-panel" data-notes="<strong>Success Criteria, 08:49 to 08:52 (3 min).</strong> Students read these back, not you. Word for word the same on the sheet, the slides and the lesson plan, one source only. Verbs from the Years 9 to 10 band: use, explain, evaluate, critique. Criterion 4 is theirs and they write it in Lap 2, so flag it now and move on. <span class='tag cfu'>CFU</span> cold call three students: which criterion will be hardest for you today, and why?">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// success_criteria</p>
+    <h2 class="reveal">How you will know you got there</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:700px">
+        <div class="tblock s reveal"><b>1 &middot;</b> I can <span class="verb">use</span> the entry routine on my own: line up alphabetically, sit to the plan, start the Do Now.</div>
+        <div class="tblock s reveal" style="margin-top:var(--element-gap)"><b>2 &middot;</b> I can <span class="verb">explain</span> one place artificial intelligence already turns up in my life, and why it matters.</div>
+        <div class="tblock s reveal" style="margin-top:var(--element-gap)"><b>3 &middot;</b> I can <span class="verb">evaluate</span> my own work against Success Criteria 1 and 2, and tick honestly.</div>
+        <div class="tblock o reveal" style="margin-top:var(--element-gap)"><b>4 &middot;</b> Personal goal: you write your own, later this lesson.</div>
+        <p class="small reveal" style="margin-top:var(--element-gap)"><b>Going further:</b> I can <span class="verb">critique</span> one use of artificial intelligence that I think is not justified.</p>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3:green" style="max-width:min(44vw,600px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · Mr Igor, profile -->
+<section class="slide g-stack" data-notes="<strong>All about Mr Igor, 08:52 to 09:05 (13 min across the next four slides).</strong> Everything on these slides comes from your own deck and nothing has been added. Keep it moving and let them ask. The Cold Call check lands on the fourth of these slides, so hold the questions until then. <strong>Principal Address s9 check:</strong> do not talk more than the students. If this block runs long, the Soccer Drones tease later is the part that can wait.">
+  <div class="slide-content" style="max-width:min(96vw,1400px)">
+    <p class="eyebrow reveal">// player_profile</p>
+    <div class="two-col img-left">
+      <div class="col-img reveal"><img class="portrait" src="assets/igor-headshot.png" alt="Mr Igor"></div>
+      <div>
+        <h2 class="reveal">Mr Igor</h2>
+        <ul class="plain">
+          <li class="reveal">This is my <b>eighth year of teaching at AIS</b>.</li>
+          <li class="reveal">I was born in <b>Mostar</b>, in Bosnia and Croatia. I have lived in Australia since I was ten.</li>
+          <li class="reveal"><b>Sydney</b> was the last place I lived before AIS.</li>
+          <li class="reveal">I really love teaching. I love technology. I love watches.</li>
+          <li class="reveal">Most importantly, I really love <b>having fun</b>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12 · Things I like -->
+<section class="slide g-well" data-notes="<strong>Things I like, about 2 min.</strong> Your own collage slide, so tell the stories behind whichever photo they point at. Nothing here is invented: watches, basketball, Australian Football League, table tennis, chess, and food. Good moment to let a student ask a question, because the whole first half of this lesson is about the class starting from belonging.">
+  <div class="slide-content" style="max-width:min(96vw,1400px)">
+    <p class="eyebrow reveal">// things_i_like</p>
+    <h2 class="reveal">Things I like</h2>
+    <div class="wide-img reveal"><img src="assets/igor-likes.jpg" alt="A collage of Mr Igor's interests: wristwatches, basketball, Australian Football League, chess, table tennis and food"></div>
+    <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip dark">watches &middot; basketball &middot; AFL &middot; table tennis &middot; chess &middot; food</span></p>
+  </div>
+</section>
+
+<!-- 13 · Places -->
+<section class="slide g-well" data-notes="<strong>Holiday photos, about 2 min.</strong> Mostar is the birthplace, the rest is holiday travel from your own deck: Dubrovnik and its city wall, Naples, Kotor. The Game of Thrones line is on the slide because they will ask anyway. Keep this quick, the Cold Call check is next.">
+  <div class="slide-content" style="max-width:min(96vw,1400px)">
+    <p class="eyebrow reveal">// where_i_have_been</p>
+    <h2 class="reveal">Where I have been</h2>
+    <div class="photo-grid reveal">
+      <figure><img src="assets/travel-mostar.jpg" alt="The old bridge at Mostar, lit at dusk"><figcaption>Mostar, where I was born</figcaption></figure>
+      <figure><img src="assets/travel-dubrovnik.jpg" alt="The coast at Dubrovnik, Croatia"><figcaption>Dubrovnik, Croatia</figcaption></figure>
+      <figure><img src="assets/travel-wall.jpg" alt="The old city wall at Dubrovnik"><figcaption>The Wall</figcaption></figure>
+      <figure><img src="assets/travel-naples.jpg" alt="A street in Naples, Italy"><figcaption>Naples, Italy</figcaption></figure>
+      <figure><img src="assets/travel-kotor.jpg" alt="An island church on the water at Kotor, Montenegro"><figcaption>Kotor, Montenegro</figcaption></figure>
+    </div>
+    <div class="tblock t reveal" style="margin-top:var(--element-gap)">A lot of <b>Game of Thrones</b> was filmed in Dubrovnik, including around that wall.</div>
+  </div>
+</section>
+
+<!-- 14 · Things I do not like + the hinge + CFU -->
+<section class="slide g-arcade" data-notes="<strong>The hinge, about 2 min, then the check.</strong> Two things, no more. Then say the line on the slide out loud, in your own voice, and let it sit for a beat. It is what hands the lesson over to the routines block in Period 2. <span class='tag cfu'>CFU</span> Cold Call three students, one fact each about Mr Igor, no hands up. Then Building Ratio: 'Who can add one more?' goes to a fourth student before you confirm anything. Three seconds of Wait Time before every answer.">
+  <div class="tetfall Z" style="left:14%; animation-duration:42s; animation-delay:-6s"></div>
+  <div class="tetfall L" style="left:82%; animation-duration:56s; animation-delay:-30s"></div>
+  <div class="slide-content">
+    <p class="eyebrow reveal">// things_i_do_not_like</p>
+    <h2 class="reveal">Two things I do not like</h2>
+    <div class="grid">
+      <div class="tblock z reveal" style="font-size:calc(clamp(0.95rem,2vw,1.5rem) * var(--font-scale))"><b>Time wasting.</b></div>
+      <div class="tblock z reveal" style="font-size:calc(clamp(0.95rem,2vw,1.5rem) * var(--font-scale))"><b>Not having fun.</b></div>
+    </div>
+    <div class="tblock quote reveal" style="margin-top:var(--content-gap)">"This will all depend on how we can work together."</div>
+    <div class="tblock i" data-fragment="1" style="margin-top:var(--content-gap)"><b>Cold call:</b> three of you, one fact each about Mr Igor. No hands up. Then a fourth person adds one more before I say whether any of it is right.</div>
+  </div>
+</section>
+
+<!-- 15 · Changeover: Heads and Tails, two coins -->
+<section class="slide g-arcade" data-notes="<strong>Changeover, 09:05 to 09:10 (5 min).</strong> The class stays in IG04, this is the gap between Period 1 and Period 2. Brain Break from OTP s3, run with two coins so a round ends faster with eleven players. Everyone stands, they choose before you flip, both coins have to match their choice. Click each coin separately or use FLIP BOTH. Play until two or three are left, then straight into Period 2.">
+  <div class="tetfall O" style="left:10%; animation-duration:40s; animation-delay:-3s"></div>
+  <div class="tetfall I" style="left:90%; animation-duration:48s; animation-delay:-19s"></div>
+  <div class="slide-content" style="align-items:center; text-align:center">
+    <p class="eyebrow reveal">// brain_break</p>
+    <h1 class="reveal">HEADS AND TAILS</h1>
+    <div class="grid reveal" style="margin-top:var(--element-gap); max-width:940px; text-align:left; grid-template-columns:repeat(2,1fr)">
+      <div class="tblock i"><b>1 &middot;</b> Everyone stands up.</div>
+      <div class="tblock o"><b>2 &middot;</b> Hands on your head for heads. Hands on your hips for tails. Choose <b>before</b> the flip.</div>
+      <div class="tblock s"><b>3 &middot;</b> Two coins go at once. You need <b>both</b> to match your choice.</div>
+      <div class="tblock z"><b>4 &middot;</b> Wrong on either coin, sit down. Last players standing win.</div>
+    </div>
+    <div class="coin-row reveal" style="margin-top:var(--content-gap)">
+      <div class="coin-slot">
+        <span class="coin-name">COIN 1</span>
+        <button class="coin" id="coinA" aria-label="Flip coin 1">
+          <div class="coin-inner" id="coinAInner">
+            <div class="coin-face">HEADS</div>
+            <div class="coin-face tails">TAILS</div>
+          </div>
+        </button>
+        <div class="coin-out" id="coinAOut">tap to flip</div>
+      </div>
+      <div class="coin-slot">
+        <span class="coin-name">COIN 2</span>
+        <button class="coin" id="coinB" aria-label="Flip coin 2">
+          <div class="coin-inner" id="coinBInner">
+            <div class="coin-face">HEADS</div>
+            <div class="coin-face tails">TAILS</div>
+          </div>
+        </button>
+        <div class="coin-out" id="coinBOut">tap to flip</div>
+      </div>
+    </div>
+    <p class="reveal" style="margin-top:var(--content-gap)"><button class="flip-both" id="flipBoth">FLIP BOTH COINS</button></p>
+  </div>
+</section>
+
+<!-- ================= PERIOD 2 · 09:10 to 09:45 ================= -->
+
+<!-- 16 · Period 2 opener: the room -->
+<section class="slide g-stack" data-notes="<strong>Lap 1 opens, 09:10 to 09:19 (9 min across the next five slides).</strong> Period 2 starts here. The room confusion is worth thirty seconds of clarity now rather than a term of students in the wrong place. <strong>Above Level:</strong> ask one of them to read the exit routine off the wall and narrate it back before you do. <strong>Below Level:</strong> the numbered steps stay on screen for the whole lap.">
+  <div class="slide-content">
+    <span class="chip reveal" style="align-self:flex-start">PERIOD 2 &middot; 09:10</span>
+    <p class="eyebrow reveal" style="margin-top:0.6em">// how_this_class_runs</p>
+    <h2 class="reveal">How this class runs</h2>
+    <div class="tblock i reveal" style="font-size:calc(clamp(0.95rem,1.9vw,1.4rem) * var(--font-scale))">
+      <b>The room.</b> IF05 is the room printed on your timetable, and that is where you line up. This lesson, and the rest of this term, runs in <b>IG04</b>. I collect you from IF05 every time.
+    </div>
+    <div class="tblock o reveal" style="margin-top:var(--element-gap)">Next: the rules that follow us everywhere, then you join Google Classroom on your own device.</div>
+  </div>
+</section>
+
+<!-- 17 · Classroom Care -->
+<section class="slide g-panel" data-notes="<strong>Classroom Care, about 1 min. Expectations s23.</strong> Reveal one at a time with NEXT. The 2 desk format is the one that matters most, because it is also the last line of their Exit Ticket. Groups are allowed, the desks just have to go back. <span class='tag cfu'>CFU</span> cold call one student: what does the room look like when you leave it?">
+  <div class="slide-content">
+    <p class="eyebrow reveal">// classroom_care</p>
+    <h2 class="reveal">Classroom Care</h2>
+    <ul class="plain">
+      <li data-fragment="1"><b>2 desk format.</b> Make groups whenever the task needs it. The desks go back to pairs before you leave.</li>
+      <li data-fragment="2"><b>Posters live on cupboards.</b> Nothing on classroom walls, and nothing on the windows facing the corridor.</li>
+      <li data-fragment="3"><b>Fresh paint, new furniture.</b> We hand this room back better than we found it.</li>
+    </ul>
+    <div class="tblock o reveal" style="margin-top:var(--content-gap)">That last line comes back at the end of the lesson, on your Exit Ticket.</div>
+  </div>
+</section>
+
+<!-- 18 · Bathroom + nurse -->
+<section class="slide g-panel" data-notes="<strong>Bathroom and nurse, about 2 min. Expectations s33 and s34.</strong> Reveal one at a time. These are school-wide rules, not Mr Igor being difficult, and saying so lands better. <span class='tag cfu'>CFU</span> fist to five on both routines at the end. Anything under 3 gets re-taught on the spot, not later. <strong>New this year:</strong> a nurse slip goes to the secondary clinic, not the Senior School Hub.">
+  <div class="slide-content">
+    <p class="eyebrow reveal">// bathroom_and_nurse</p>
+    <h2 class="reveal">Bathroom and nurse</h2>
+    <div class="tblock i reveal">
+      <b>Bathroom.</b> You need an All Access Pass from me. Not in the first 15 minutes of a lesson, and not in the last 15. One student out at a time. Nearest bathroom to this room. Five minutes.
+    </div>
+    <div class="tblock s reveal" style="margin-top:var(--element-gap)">
+      <b>Feeling unwell.</b> I write you a nurse slip and you go straight to the secondary clinic, not the Senior School Hub. The nurse signs you back in.
+    </div>
+    <div class="tblock o reveal" style="margin-top:var(--element-gap)">
+      <b>Break time exists for a reason.</b> Go then, and you never need the pass at all.
+    </div>
+  </div>
+</section>
+
+<!-- 19 · Appearance and uniform -->
+<section class="slide g-panel" data-notes="<strong>Appearance and uniform, about 2 min. Expectations s35, s42 to s45.</strong> Reveal one at a time with NEXT. Checked at the door every lesson is the headline, and it is why you stood at the door this morning. Say plainly that this is an all staff, whole school expectation. Keep it short, do not let it become the lesson.">
+  <div class="slide-content">
+    <p class="eyebrow reveal">// appearance_and_uniform</p>
+    <h2 class="reveal">Appearance and uniform</h2>
+    <ul class="plain">
+      <li data-fragment="1"><b>Checked at the door, every lesson.</b> Fixes happen outside, before you come in.</li>
+      <li data-fragment="2"><b>Makeup:</b> natural foundation only. No eyeliner, mascara, lip gloss or lipstick.</li>
+      <li data-fragment="3"><b>Nails:</b> no nail extensions, no coloured gel.</li>
+      <li data-fragment="4"><b>Bandaids:</b> medical only, skin colour or clear.</li>
+      <li data-fragment="5"><b>Drama and sports uniforms</b> are worn on their own days and events only, not in ICT.</li>
+      <li data-fragment="6"><b>Shoes and jewellery</b> follow the AIS appearance policy. If you are unsure, ask me before someone else asks you.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 20 · Google Classroom join -->
+<section class="slide g-stack" data-timer="300" data-notes="<strong>Classroom join, 5 min. Timer on the slide.</strong> Devices out, this is the BYOD moment. Walk the four steps live on the board while they follow. Circulate hard and buddy anyone stuck to a neighbour before you touch their device. <span class='tag cfu'>CFU</span> everyone holds their screen up showing the class stream before you move on. From Lesson 2 the Do Now lands in Classroom, so a student not joined is a student without a Do Now.">
+  <div class="slide-content">
+    <p class="eyebrow reveal">// home_base</p>
+    <h2 class="reveal">Join Google Classroom now</h2>
+    <p class="reveal" style="margin-bottom:var(--content-gap)"><span class="chip big">CODE: yvyk3hu2</span></p>
+    <ul class="steps">
+      <li class="reveal">Open <b>classroom.google.com</b> on your own device.</li>
+      <li class="reveal">Sign in with your <b>AIS school account</b>. Personal accounts will not work.</li>
+      <li class="reveal">Tap the <b>+</b> in the top right, then <b>Join class</b>.</li>
+      <li class="reveal">Type <b>yvyk3hu2</b> and tap <b>Join</b>.</li>
+    </ul>
+    <p class="reveal" style="margin-top:var(--element-gap)">
+      <a class="linkbtn" href="https://classroom.google.com" target="_blank" rel="noopener">&#9654; open Google Classroom</a>
+    </p>
+    <div class="tblock o reveal" style="margin-top:var(--element-gap)">From Lesson 2, every Do Now arrives here. Today it was on paper because you were joining.</div>
+  </div>
+</section>
+
+<!-- 21 · Super Challenge -->
+<section class="slide g-well" data-notes="<strong>Super Challenge, about 1 min.</strong> Word for word off the sheet, Box 8, four ruled lines. Only once every activity in the lesson is finished, and say that out loud, because otherwise the fast finishers skip the Turn and Talk to get to it. This is the critique verb from the Years 9 to 10 band, and it is the SC extension line made real.">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// super_challenge</p>
+    <h2 class="reveal">Super Challenge</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:680px">
+        <div class="tblock o reveal"><b>Only once every activity in the lesson is finished.</b></div>
+        <div class="tblock o reveal" style="margin-top:var(--element-gap); font-size:calc(clamp(0.92rem,1.8vw,1.32rem) * var(--font-scale))">
+          On your own device, research one real use of artificial intelligence. Then <span class="verb">critique</span> it. Write three things: the use you found, what could go wrong, and what a person still has to do.
+        </div>
+        <div class="tblock i reveal" style="margin-top:var(--element-gap)">Hand it to Mr Igor, or post it in Google Classroom once you have joined.</div>
+        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">four ruled lines, Box 8 on your sheet</span></p>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b8:gold" style="max-width:min(44vw,600px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 22 · CFU 1 -->
+<section class="slide g-panel" data-timer="60" data-notes="<strong>CFU 1, 09:19 to 09:21 (2 min). Success Criterion 1.</strong> 60 second timer on the slide for the Everybody Writes. This is OTP s19 structure, so every one of the eleven writes something rather than three hands going up. Then Cold Call three students to narrate the entry routine end to end, and Building Ratio: the third student adds to the second, they do not start again. Fist to five on bathroom and nurse. <strong>Anything under 3 gets re-taught right now.</strong>">
+  <div class="slide-content">
+    <p class="eyebrow reveal">// check_for_understanding &middot; SC 1</p>
+    <h2 class="reveal">Check: can you run the routines?</h2>
+    <ul class="steps">
+      <li class="reveal"><b>Everybody writes, 60 seconds.</b> In the margin of your sheet, write the two routine steps you are least sure about.</li>
+      <li class="reveal"><b>Cold call.</b> Three of you narrate the entry routine from start to finish. No hands up.</li>
+      <li class="reveal"><b>Fist to five.</b> How sure are you about the bathroom rule and the nurse rule?</li>
+    </ul>
+    <div class="tcall reveal" data-teacher-only="true" style="margin-top:var(--content-gap)">anything under a 3 gets re-taught on the spot, not later.</div>
+  </div>
+</section>
+
+<!-- 23 · Lap 2: what a tick means -->
+<section class="slide g-paper" data-notes="<strong>Lap 2, 09:21 to 09:27 (6 min over this slide and the next).</strong> The sheet is taught as an instrument, not as paperwork. The tick definition is the whole point of this slide: a tick is a claim that you can do it now. Walk the Self-Barometer at the bottom too, so the reflection later is not the first time they see it. <span class='tag cfu'>CFU</span> cold call two students: what does a tick on Success Criterion 2 mean you have done?">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// what_a_tick_means</p>
+    <h2 class="reveal">A tick means you can do it now</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:620px">
+        <div class="tblock s reveal"><b>A tick means you can do it now.</b> Not that you had a go at it.</div>
+        <div class="tblock o reveal" style="margin-top:var(--element-gap)"><b>The Self-Barometer</b> at the bottom runs 1 Not Confident to 5 Mastered. You place yourself, and it is not a mark.</div>
+        <div class="tblock i reveal" style="margin-top:var(--element-gap)"><b>Where the sheet lives.</b> Handed in at the end of every lesson, and kept as your record of the term.</div>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="" style="max-width:min(46vw,640px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 24 · Personal goal -->
+<section class="slide g-well" data-timer="120" data-notes="<strong>Personal goal, 2 min. Timer on the slide.</strong> Success Criterion 4 belongs to them. Read the three examples, then everyone writes their own on the gold-ringed line. Copying one of the examples word for word is allowed, say so. Circulate and read every goal while they write. <strong>Above Level:</strong> your goal names a habit, not a task. <strong>Below Level:</strong> the three examples on screen are enough. <span class='tag cfu'>CFU</span> Show Call two goals and let the class decide which is checkable, and why. The students judge, not you.">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// choose_your_goal</p>
+    <h2 class="reveal">Success Criterion 4: your personal goal</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:680px">
+        <div class="tblock o reveal"><b>Write one line on your sheet.</b> It has to be something you can check by the end of a lesson.</div>
+        <ul class="steps" style="margin-top:var(--element-gap)">
+          <li class="reveal">I will answer one cold call out loud without saying pass.</li>
+          <li class="reveal">I will say my partner's answer back correctly in the Turn and Talk.</li>
+          <li class="reveal">I will tick my Success Criteria honestly, including the ones I cannot tick yet.</li>
+        </ul>
+        <div class="tblock i reveal" style="margin-top:var(--element-gap)">Take one of those word for word, or write your own. Both are fine.</div>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3r4:gold" style="max-width:min(44vw,600px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 25 · CFU 2 -->
+<section class="slide g-panel" data-notes="<strong>CFU 2, 09:27 to 09:29 (2 min). Success Criterion 3.</strong> Cold Call two students on what a tick means, then Show Call two personal goals on the visualiser. Ask the class which one is checkable and why: they judge the goals, you do not. Building Ratio through Questioning, and three seconds of Wait Time before every answer.">
+  <div class="slide-content">
+    <p class="eyebrow reveal">// check_for_understanding &middot; SC 3</p>
+    <h2 class="reveal">Check: is your goal checkable?</h2>
+    <ul class="steps">
+      <li class="reveal"><b>Cold call, two people.</b> What does a tick on Success Criterion 2 mean you have done?</li>
+      <li class="reveal"><b>Show call, two goals.</b> Which one of these can actually be checked by the end of a lesson, and why?</li>
+    </ul>
+    <div class="tblock s reveal" style="margin-top:var(--content-gap)">You decide which goal is checkable. I am not the one judging this one.</div>
+  </div>
+</section>
+
+<!-- 26 · Turn and Talk, its own structured slide -->
+<section class="slide g-stack" data-timer="300" data-notes="<strong>Lap 3 part 1, Turn and Talk, 5 min. Timer on the slide.</strong> Structure copied straight from OTP s6, so an observer can name it. Read all five lines of the structure before anyone speaks. Say 'Swap' out loud at the halfway point, about 2 minutes 30. <span class='tag tt'>Turn and Talk</span> <span class='tag cfu'>CFU</span> the Cold Call comes two slides later and asks for the PARTNER'S answer, so tell them that now, before they start listening. <strong>Below Level:</strong> both questions stay on screen the whole time, and the sentence starter is there. <strong>Above Level:</strong> take Question 2 first, then justify.">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// turn_and_talk</p>
+    <h2 class="reveal">Turn and Talk: 5 minutes</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:700px">
+        <div class="tblock i reveal"><b>Question 1.</b> Where have you already seen artificial intelligence working, outside school?</div>
+        <div class="tblock i reveal" style="margin-top:var(--element-gap)"><b>Question 2.</b> Name one thing you would trust AI to do, and one thing you would not.</div>
+        <ul class="steps" style="margin-top:var(--element-gap)">
+          <li class="reveal"><b>Your partner</b> is the person sitting next to you.</li>
+          <li class="reveal"><b>Who talks first:</b> the partner whose first name comes first in the alphabet. You lined up in that order this morning, so you already know.</li>
+          <li class="reveal"><b>Swap</b> when Mr Igor says "Swap", halfway through.</li>
+          <li class="reveal"><b>Cold call at the end:</b> you say your <b>partner's</b> answer, not your own.</li>
+        </ul>
+        <div class="tblock s reveal" style="margin-top:var(--element-gap)"><b>Stuck for a sentence?</b> Try: "I have seen AI when ..."</div>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3r2:green" style="max-width:min(40vw,540px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 27 · Roadmap: the AI fortnight -->
+<section class="slide g-arcade" data-notes="<strong>Lap 3 part 2, the roadmap, about 3 min.</strong> A tease, not a lesson. Nothing is built today and nobody touches Gemini today, and the slide says so. The wording comes from the unit itself: a vague prompt makes the AI guess, a detailed one hands it a blueprint, and 'Rubbish in, rubbish out.' Step 3 and 4 are new for Grade 10 and different from how the younger classes ran it, so say that. <strong>Misconception, if it comes up:</strong> AI thinks like a person. It predicts patterns from training data. Name it and park it, it is taught properly next block.">
+  <div class="tetfall I" style="left:5%;  animation-duration:44s; animation-delay:-7s"></div>
+  <div class="tetfall T" style="left:95%; animation-duration:50s; animation-delay:-24s"></div>
+  <div class="slide-content" style="max-width:min(96vw,1400px)">
+    <p class="eyebrow reveal">// next_two_weeks</p>
+    <h2 class="reveal">The next two weeks: AI, and a game of Tetris</h2>
+    <ul class="steps">
+      <li class="reveal"><b>What AI actually is.</b> It finds patterns in the information it was trained on and predicts what comes next. It does not think.</li>
+      <li class="reveal"><b>Good prompt against bad prompt.</b> A vague prompt makes the AI guess. A detailed one hands it a blueprint. The line from this unit: <b>"Rubbish in, rubbish out."</b></li>
+      <li class="reveal"><b>Research what Tetris actually is</b>, so you know what you are asking for.</li>
+      <li class="reveal"><b>You get 10 to 15 minutes</b> to attempt a Tetris build any way you like. New for Grade 10, and not how the younger classes ran it.</li>
+      <li class="reveal"><b>Then the one-shot prompt.</b> One long, highly detailed prompt that produces a working game.</li>
+    </ul>
+    <div class="tblock t reveal" style="margin-top:var(--element-gap)"><b>The tool is Google Gemini.</b> Its rules slide is the first thing we do next block, before anyone signs in.</div>
+    <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip red">Nothing is built today. Nobody touches Gemini today.</span></p>
+  </div>
+</section>
+
+<!-- 28 · Soccer Drones tease -->
+<section class="slide g-well" data-notes="<strong>Soccer Drones tease, about 1 min.</strong> Four facts only, and they are the four on the slide. Nothing about AIS dates, rooms or purchases, because none of that exists in the proposal document. If a student asks when, the honest answer is that you do not have a date yet. <strong>Pacing:</strong> this is the one part of the lesson that can move to the top of next lesson if the routines block overran.">
+  <div class="tetfall J" style="left:88%; animation-duration:46s; animation-delay:-12s"></div>
+  <div class="slide-content" style="max-width:min(96vw,1400px)">
+    <p class="eyebrow reveal">// and_after_that</p>
+    <h2 class="reveal">And after that: Soccer Drones</h2>
+    <div class="grid">
+      <div class="tblock i reveal"><b>A real arena.</b> An enclosed flying space, 6 m by 3 m by 3 m, built so the drones and the people stay safe.</div>
+      <div class="tblock o reveal"><b>The "ball" is not a ball.</b> It is a small caged quadcopter, tough enough to be knocked around a netted arena and keep flying.</div>
+      <div class="tblock s reveal"><b>You code before you fly.</b> Before anyone flies a Soccer Drone, you code and pilot separate programming drones through a tablet coding pad.</div>
+      <div class="tblock t reveal"><b>It goes somewhere.</b> Drone soccer links to a real international competition, the International Drone Soccer Challenge.</div>
+    </div>
+    <div class="tcall reveal" data-teacher-only="true" style="margin-top:var(--content-gap)">four facts only. no dates, no rooms, no purchase claims, because none of that is in the source.</div>
+  </div>
+</section>
+
+<!-- 29 · CFU 3 -->
+<section class="slide g-panel" data-notes="<strong>CFU 3, 09:38 to 09:40 (2 min). Success Criterion 2.</strong> Cold Call four students, partners only. The question is 'What did your partner say?' and no hands go up. Then one Building Ratio follow-up each: 'Why do you think they said that?' Three seconds of Wait Time before every answer. This is the oracy strand doing real work: every student has to restate someone else's idea in a full sentence.">
+  <div class="slide-content">
+    <p class="eyebrow reveal">// check_for_understanding &middot; SC 2</p>
+    <h2 class="reveal">Check: what did your partner say?</h2>
+    <ul class="steps">
+      <li class="reveal"><b>Four of you, partners only.</b> What did your partner say? No hands up, I pick.</li>
+      <li class="reveal"><b>Then one more question each.</b> Why do you think they said that?</li>
+    </ul>
+    <div class="tblock i reveal" style="margin-top:var(--content-gap)">Your own answer is not what I am asking for. Say your partner's.</div>
+    <div class="tcall reveal" data-teacher-only="true" style="margin-top:var(--element-gap)">three seconds of wait time before every answer. do not rescue the silence.</div>
+  </div>
+</section>
+
+<!-- 30 · Reflection -->
+<section class="slide g-paper" data-timer="180" data-notes="<strong>Reflection, 09:40 to 09:43 (3 min). Timer on the slide.</strong> Sheets out, everyone. Green ring is the Success Criteria block, gold ring is the Self-Barometer. A tick means you can do it now, say it one more time. <strong>Show Call one sheet and celebrate an honest 2</strong>, out loud, by name if they are happy with it. Honesty is the entire point of the barometer, and if the first lesson rewards a dishonest 5 you will never get a true one again.">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// reflection</p>
+    <h2 class="reveal">Tick honestly</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:560px">
+        <ul class="steps">
+          <li class="reveal"><b>Tick Success Criteria 1 to 3.</b> A tick means you can do it now.</li>
+          <li class="reveal"><b>Tick your personal goal</b> if you actually proved it today.</li>
+          <li class="reveal"><b>Tick the Self-Barometer, 1 to 5.</b> It is not a mark, and an honest 2 beats a made-up 5.</li>
+        </ul>
+        <div class="tblock s reveal" style="margin-top:var(--element-gap)">Nobody is checking these against each other. You are grading how sure you are, not how good you are.</div>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3:green,b10:gold" style="max-width:min(46vw,640px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 31 · Exit Ticket -->
+<section class="slide g-paper" data-timer="120" data-notes="<strong>Exit Ticket, 2 min. Timer on the slide.</strong> Both questions word for word off the sheet, Box 9, two ruled lines each. The Classroom Care line under Q2 is the cue to reset the room, so read it before they stand rather than after. The join code stays visible for anyone who did not get into Classroom earlier. <span class='tag cfu'>CFU</span> read two answers aloud as you collect, no names.">
+  <div class="slide-content" style="max-width:min(96vw,1420px)">
+    <p class="eyebrow reveal">// exit_ticket</p>
+    <h2 class="reveal">Exit Ticket</h2>
+    <div class="two-col" style="align-items:start">
+      <div style="max-width:620px">
+        <div class="tblock z reveal" style="font-size:calc(clamp(0.92rem,1.8vw,1.32rem) * var(--font-scale))"><b>Q1 &middot;</b> Write one thing you now know about how this class runs.</div>
+        <div class="tblock z reveal" style="margin-top:var(--element-gap); font-size:calc(clamp(0.92rem,1.8vw,1.32rem) * var(--font-scale))"><b>Q2 &middot;</b> Write one thing you already think about artificial intelligence.</div>
+        <div class="tblock o reveal" style="margin-top:var(--element-gap)"><b>Before you stand:</b> desks back to the 2 desk format, chairs in, nothing left behind.</div>
+        <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">not in Classroom yet? code: yvyk3hu2</span></p>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b9:red" style="max-width:min(44vw,600px)"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 32 · Exit procedures -->
+<section class="slide g-stack" data-notes="<strong>Exit, 09:43 to 09:45 (2 min).</strong> Stand at the door. Sheets in as they leave, name checked on each one, because that stack is the progression record for the term. Dismiss by table, never all at once. <strong>Teacher, after they go: confirm the iSAMS register is finalised before the next class walks in.</strong> Next lesson opens with the Gemini rules slide, then the Tetris research step.">
+  <div class="slide-content">
+    <p class="eyebrow reveal">// out_the_door</p>
+    <h2 class="reveal">Out the door</h2>
+    <ul class="steps">
+      <li class="reveal"><b>Sheet handed to me at the door</b>, with your name on it. That is your record.</li>
+      <li class="reveal"><b>Desks back to the 2 desk format</b>, chairs in, nothing left on the floor.</li>
+      <li class="reveal"><b>Dismissed by table</b>, not all at once. I am standing at the door.</li>
+    </ul>
+    <p class="reveal" style="margin-top:var(--content-gap)">
+      <span class="chip big">CODE: yvyk3hu2</span>
+      &nbsp;<a class="linkbtn gold" href="https://classroom.google.com" target="_blank" rel="noopener">&#9654; open Google Classroom</a>
+    </p>
+    <div class="tblock i reveal" style="margin-top:var(--element-gap)"><b>Next lesson:</b> the Gemini rules, then you research what Tetris actually is.</div>
+    <div class="tcall reveal" data-teacher-only="true" style="margin-top:var(--element-gap)">confirm the iSAMS register is finalised before the next class walks in.</div>
+  </div>
+</section>
+
+<!-- ===========================================
+     THE STUDENT SHEET TEMPLATE
+     Cloned into every .sheet-slot at boot. Words come from
+     Student Sheet content.md and are never written twice.
+     =========================================== -->
+<template id="sheetTpl">
+  <div class="sheet">
+    <div class="sh-box b1 sh-head">
+      <span><b>Week 1 Day 1 : Welcome to ICT, and what the next two weeks look like</b></span>
+      <span>Student: <span class="rule" style="display:inline-block; width:6em"></span></span>
+    </div>
+    <div class="sh-cols">
+      <div class="sh-col">
+        <div class="sh-box b2">
+          <span class="sh-h">LEARNING INTENTION</span>
+          <span class="sh-sub">What we are learning today and why:</span>
+          <span>We are learning to <i><b>explain</b></i> what you already think artificial intelligence is. We are also learning to <i><b>use</b></i> the routines this class runs on.</span>
+          <span class="sh-mini">Artificial intelligence (AI): computer software that learns patterns from huge amounts of information, then uses those patterns to make something new.</span>
+          <span class="sh-mini">Why: your starting view of AI is the thing we test and sharpen over the next two weeks. The routines mean every lesson starts itself, so the build time stays yours.</span>
+        </div>
+        <div class="sh-box b3">
+          <span class="sh-h">SUCCESS CRITERIA</span>
+          <span class="sh-row b3r1"><i class="sh-tick"></i><span>1 &nbsp;I can <i><b>use</b></i> the entry routine on my own: line up alphabetically, sit to the plan, start the Do Now.</span></span>
+          <span class="sh-row b3r2"><i class="sh-tick"></i><span>2 &nbsp;I can <i><b>explain</b></i> one place artificial intelligence already turns up in my life, and why it matters.</span></span>
+          <span class="sh-row b3r3"><i class="sh-tick"></i><span>3 &nbsp;I can <i><b>evaluate</b></i> my own work against Success Criteria 1 and 2, and tick honestly.</span></span>
+          <span class="sh-mini">Going further: I can <i><b>critique</b></i> one use of artificial intelligence that I think is not justified.</span>
+          <span class="sh-row b3r4"><i class="sh-tick"></i><span>4 &nbsp;Personal goal: <span class="rule"></span></span></span>
+        </div>
+        <div class="sh-box b4">
+          <span class="sh-h">SKILLS AND ROLES</span>
+          <span>Skills focus today: listening well enough to say your partner's answer back, and judging your own work honestly against the Success Criteria.</span>
+          <span>Your role today: table member. Everyone shares once before anyone shares twice.</span>
+        </div>
+      </div>
+      <div class="sh-col">
+        <div class="sh-box b5">
+          <span class="sh-h">DO NOW: My Top Three</span>
+          <span>Write your own Top 3 first, on your own, in silence. Your table agrees one Top 3 after.</span>
+          <span class="sh-mini">Category: the technology you would not want to live without.</span>
+          <span class="sh-row"><i class="sh-tick"></i><span>1 &nbsp;My number one, and one reason why: <span class="rule"></span><span class="rule"></span></span></span>
+          <span class="sh-row"><i class="sh-tick"></i><span>2 &nbsp;My number two: <span class="rule"></span></span></span>
+          <span class="sh-row"><i class="sh-tick"></i><span>3 &nbsp;My number three: <span class="rule"></span></span></span>
+        </div>
+        <div class="sh-box b6">
+          <span class="sh-h">HINT (stuck on the Do Now?)</span>
+          <span>Think about your last 24 hours. What did you switch on, pick up or open first?</span>
+        </div>
+        <div class="sh-box b7">
+          <span class="sh-h">CHALLENGE (finished the Do Now?)</span>
+          <span>Connect your three. Write one sentence that is true for all three of your choices.</span>
+          <span class="rule"></span><span class="rule"></span>
+        </div>
+      </div>
+    </div>
+    <div class="sh-band">
+      <div class="sh-box b8">
+        <span class="sh-h">SUPER CHALLENGE</span>
+        <span class="sh-mini">Only once every activity in the lesson is finished.</span>
+        <span>On your own device, research one real use of artificial intelligence. Then <i><b>critique</b></i> it. Write three things: the use you found, what could go wrong, and what a person still has to do.</span>
+        <span class="sh-mini">Hand it to Mr Igor, or post it in Google Classroom once you have joined.</span>
+        <span class="rule"></span><span class="rule"></span><span class="rule"></span><span class="rule"></span>
+      </div>
+      <div class="sh-box b9">
+        <span class="sh-h">EXIT TICKET</span>
+        <span>Q1 &nbsp;Write one thing you now know about how this class runs.</span>
+        <span class="rule"></span><span class="rule"></span>
+        <span>Q2 &nbsp;Write one thing you already think about artificial intelligence.</span>
+        <span class="rule"></span><span class="rule"></span>
+        <span class="sh-mini">BEFORE YOU STAND: DESKS BACK TO THE 2 DESK FORMAT, CHAIRS IN, NOTHING LEFT BEHIND.</span>
+      </div>
+    </div>
+    <div class="sh-box b10">
+      <span class="sh-h">SELF-BAROMETER</span>
+      <span class="sh-sub">Tick where you are</span>
+      <span class="sh-bar">
+        <div><b>1</b>Not Confident<br>Needs support<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+        <div><b>2</b>Basic<br>Needs guidance<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+        <div><b>3</b>Developing<br>With reminders<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+        <div><b>4</b>Confident<br>Independent<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+        <div><b>5</b>Mastered<br>Can teach others<br><i class="sh-tick" style="margin:2px auto 0"></i></div>
+      </span>
+    </div>
+  </div>
+</template>
+
+<!-- speaker notes panel -->
+<aside class="speaker-notes-panel" id="speakerNotes" aria-label="Speaker notes (press N or triple-tap NEXT)">
+  <div class="notes-header">
+    <span class="notes-label">Speaker Notes</span>
+    <span class="notes-counter" id="notesCounter">Slide 1</span>
+  </div>
+  <div class="notes-body" id="notesBody">(no notes for this slide)</div>
+</aside>
+<div class="notes-hint" id="notesHint">N = notes &middot; E = edit &middot; &#8984;S = save copy</div>
+
+<!-- controls pill -->
+<div class="font-scale-ctrl" id="fontScaleCtrl">
+  <button id="fsMinus" class="fs-btn" aria-label="Smaller text" title="Smaller (&#8984; ,)">A&#8722;</button>
+  <span id="fsLabel">100%</span>
+  <button id="fsPlus" class="fs-btn" aria-label="Larger text" title="Larger (&#8984; .)">A+</button>
+  <span class="ctrl-divider" aria-hidden="true"></span>
+  <button id="fullscreenBtn" class="fs-btn" aria-label="Fullscreen" title="Fullscreen (F)">&#9187;</button>
+  <span class="ctrl-divider" aria-hidden="true"></span>
+  <button id="teacherBtn" class="fs-btn teacher-btn" aria-label="Toggle teacher callouts" title="Toggle teacher prompts (&#8984;&#8679;H)">&#127891;</button>
+  <span class="ctrl-divider" aria-hidden="true"></span>
+  <button id="editBtn" class="fs-btn edit-btn" aria-label="Edit mode" title="Edit text (E), then &#8984;S to save a copy">&#9999;&#65039;</button>
+</div>
+
+<script>
+/* STORAGE POLICY: inline text edits persist in THIS browser, keyed to DECK_VERSION.
+   Any deck push bumps DECK_VERSION (push-update.sh does it automatically), which purges
+   stored edits so a stale edit can never be restored over a restructured deck.
+   Everything else (font scale, teacher toggle, iSAMS state, timers) stays session-only. */
+const DECK_VERSION = 'v20260831-174658';
+const EDIT_KEY = 'g10w1-edits:' + DECK_VERSION;
+try { Object.keys(localStorage).forEach(k => { if (k !== EDIT_KEY) localStorage.removeItem(k); }); } catch (e) {}
+
+/* ===========================================
+   STUDENT SHEET: one template, cloned into every point of use.
+   data-rings="b5:gold,b6:gold" rings those boxes and dims the rest,
+   so the class always sees exactly which box we are on.
+   =========================================== */
+function buildSheets() {
+  const tpl = document.getElementById('sheetTpl');
+  if (!tpl) return;
+  document.querySelectorAll('.sheet-slot').forEach(slot => {
+    slot.appendChild(tpl.content.cloneNode(true));
+    const sheet = slot.querySelector('.sheet');
+    const spec = (slot.dataset.rings || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!spec.length) return;
+    sheet.classList.add('has-ring');
+    spec.forEach(s => {
+      const parts = s.split(':');
+      const el = sheet.querySelector('.' + parts[0]);
+      if (el) el.classList.add('ringed', 'ring-' + (parts[1] || 'red'));
+    });
+    sheet.querySelectorAll('.sh-box').forEach(b => {
+      if (!b.classList.contains('ringed') && !b.querySelector('.ringed')) b.classList.add('dim');
+    });
+  });
+}
+
+/* How far a slide's content pokes out past its own box, top and bottom.
+   Measured off real boxes so a centred flex column reports honestly. */
+function slideOverflow(content) {
+  const cs = getComputedStyle(content);
+  const rect = content.getBoundingClientRect();
+  const top = rect.top + parseFloat(cs.paddingTop);
+  const bottom = rect.bottom - parseFloat(cs.paddingBottom);
+  let minY = Infinity, maxY = -Infinity;
+  Array.from(content.children).forEach(ch => {
+    if (getComputedStyle(ch).position === 'absolute') return;
+    const r = ch.getBoundingClientRect();
+    if (!r.height) return;
+    minY = Math.min(minY, r.top); maxY = Math.max(maxY, r.bottom);
+  });
+  if (minY === Infinity) return 0;
+  return Math.max(0, top - minY) + Math.max(0, maxY - bottom);
+}
+
+/* Keeps every sheet as big as its slide allows and never clipped: shrink it
+   by exactly what the slide overruns, then check again in case one pass
+   was not enough. Re-runs on resize and whenever the font scale changes. */
+function fitSheets() {
+  const figs = Array.from(document.querySelectorAll('.sheet-fig'));
+  figs.forEach(fig => {
+    const sheet = fig.querySelector('.sheet');
+    if (!sheet) return;
+    sheet.style.transform = 'none';
+    sheet.dataset.fitScale = '1';
+    fig.style.height = '';
+  });
+  for (let pass = 0; pass < 3; pass++) {
+    let changed = false;
+    figs.forEach(fig => {
+      const sheet = fig.querySelector('.sheet');
+      const content = fig.closest('.slide-content');
+      if (!sheet || !content) return;
+      const over = slideOverflow(content);
+      if (over < 3) return;
+      const rendered = sheet.getBoundingClientRect().height;
+      if (rendered < 60) return;
+      const current = parseFloat(sheet.dataset.fitScale || '1');
+      const next = Math.max(0.35, current * Math.max(0.4, (rendered - over - 8) / rendered));
+      if (Math.abs(next - current) < 0.005) return;
+      sheet.dataset.fitScale = next;
+      sheet.style.transform = 'scale(' + next + ')';
+      fig.style.height = Math.round(sheet.offsetHeight * next) + 'px';
+      changed = true;
+    });
+    if (!changed) break;
+  }
+}
+
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   =========================================== */
+class SlidePresentation {
+  constructor() {
+    this.slides = document.querySelectorAll('.slide');
+    this.total = this.slides.length;
+    this.current = 0;
+    this.onTripleTap = null;
+    this.bindKeyboard();
+    this.bindWheelTouch();
+    this.buildDots();
+    this.observe();
+    this.slides[0].classList.add('active', 'visible');
+    this.update();
+  }
+  getFragments() {
+    return Array.from(this.slides[this.current].querySelectorAll('[data-fragment]'))
+      .sort((a, b) => parseInt(a.dataset.fragment, 10) - parseInt(b.dataset.fragment, 10));
+  }
+  next() {
+    const frags = this.getFragments();
+    for (const f of frags) {
+      if (!f.classList.contains('fragment-visible')) { f.classList.add('fragment-visible'); return; }
+    }
+    this.goTo(this.current + 1);
+  }
+  prev() {
+    const frags = this.getFragments();
+    for (let i = frags.length - 1; i >= 0; i--) {
+      if (frags[i].classList.contains('fragment-visible')) { frags[i].classList.remove('fragment-visible'); return; }
+    }
+    this.goTo(this.current - 1);
+  }
+  goTo(i) {
+    if (i < 0 || i >= this.total || i === this.current) return;
+    this.slides[this.current].querySelectorAll('[data-fragment]').forEach(f => f.classList.remove('fragment-visible'));
+    this.slides[this.current].classList.remove('active');
+    this.current = i;
+    this.slides[this.current].querySelectorAll('[data-fragment]').forEach(f => f.classList.remove('fragment-visible'));
+    this.slides[this.current].classList.add('active');
+    this.slides[this.current].scrollIntoView({ behavior: 'smooth' });
+    this.update();
+  }
+  bindKeyboard() {
+    const NEXT = ['ArrowRight', 'ArrowDown', 'PageDown', ' '];
+    const PREV = ['ArrowLeft', 'ArrowUp', 'PageUp'];
+    /* Debounced triple-tap: 200ms idle window. 3+ presses fire onTripleTap (speaker notes). */
+    this.TAP_DEBOUNCE_MS = 200;
+    this.tapCount = 0;
+    this.tapTimer = null;
+    const flushTaps = () => {
+      const count = this.tapCount;
+      this.tapCount = 0; this.tapTimer = null;
+      if (count >= 3) { if (typeof this.onTripleTap === 'function') this.onTripleTap(); }
+      else { for (let i = 0; i < count; i++) this.next(); }
+    };
+    document.addEventListener('keydown', (e) => {
+      if (e.target.isContentEditable || ['INPUT','TEXTAREA','IFRAME'].includes(e.target.tagName)) return;
+      if (NEXT.includes(e.key)) {
+        e.preventDefault();
+        if (e.repeat) return;
+        this.tapCount += 1;
+        if (this.tapTimer) clearTimeout(this.tapTimer);
+        this.tapTimer = setTimeout(flushTaps, this.TAP_DEBOUNCE_MS);
+        return;
+      }
+      if (PREV.includes(e.key)) { e.preventDefault(); this.prev(); }
+      if (e.key === 'Home') { e.preventDefault(); this.goTo(0); }
+      if (e.key === 'End')  { e.preventDefault(); this.goTo(this.total - 1); }
+    });
+  }
+  bindWheelTouch() {
+    let wheelLock = false;
+    window.addEventListener('wheel', (e) => {
+      if (wheelLock) return;
+      wheelLock = true;
+      setTimeout(() => wheelLock = false, 450);
+      if (e.deltaY > 12) this.next(); else if (e.deltaY < -12) this.prev();
+    }, { passive: true });
+    let touchY = null;
+    window.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchend', (e) => {
+      if (touchY === null) return;
+      const dy = touchY - e.changedTouches[0].clientY;
+      if (Math.abs(dy) > 50) { dy > 0 ? this.next() : this.prev(); }
+      touchY = null;
+    }, { passive: true });
+  }
+  buildDots() {
+    this.dots = document.querySelector('.nav-dots');
+    this.dots.innerHTML = ''; /* clear so a saved copy does not duplicate dots */
+    this.slides.forEach((s, i) => {
+      const b = document.createElement('button');
+      b.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      b.addEventListener('click', () => this.goTo(i));
+      this.dots.appendChild(b);
+    });
+  }
+  observe() {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          en.target.classList.add('visible');
+          const idx = Array.from(this.slides).indexOf(en.target);
+          if (idx !== -1 && idx !== this.current) {
+            this.slides[this.current].classList.remove('active');
+            this.current = idx;
+            this.slides[idx].classList.add('active');
+            this.update();
+          }
+        }
+      });
+    }, { threshold: 0.55 });
+    this.slides.forEach(s => io.observe(s));
+  }
+  update() {
+    document.querySelector('.progress-bar').style.width = ((this.current + 1) / this.total * 100) + '%';
+    this.dots.querySelectorAll('button').forEach((b, i) => b.classList.toggle('active', i === this.current));
+    const num = document.getElementById('slideNum');
+    if (num) num.textContent = (this.current + 1) + ' / ' + this.total;
+  }
+}
+
+/* ===========================================
+   iSAMS REGISTER POP-UP
+   Arrives on the slide marked data-isams (the housekeeping slide, 3) and
+   stays on EVERY slide from there until the teacher presses done.
+   One register for this double, final by 08:35, per Igor's timetable.
+   Session-only: a fresh page load brings it back for the next class.
+   =========================================== */
+class IsamsReminder {
+  constructor(presentation) {
+    this.presentation = presentation;
+    this.pop = document.getElementById('isamsPop');
+    this.done = false;
+    this.fromIndex = Array.from(presentation.slides).findIndex(s => s.dataset.isams === 'true');
+    if (this.fromIndex < 0) this.fromIndex = 2;
+    document.getElementById('isamsDone').addEventListener('click', () => {
+      this.done = true;
+      this.apply();
+    });
+    const orig = presentation.update.bind(presentation);
+    presentation.update = () => { orig(); this.apply(); };
+    this.apply();
+  }
+  apply() {
+    const wants = !this.done && this.presentation.current >= this.fromIndex;
+    this.pop.classList.toggle('show', wants);
+  }
+}
+
+/* ===========================================
+   COUNTDOWN TIMER
+   Shows on slides with data-timer="seconds". Click starts or pauses,
+   double-click resets. Slides sharing data-timer-group keep one clock,
+   so a two-part activity does not restart when the slide changes.
+   =========================================== */
+class SlideTimer {
+  constructor(presentation) {
+    this.presentation = presentation;
+    this.pill = document.createElement('button');
+    this.pill.className = 'timer-pill';
+    this.pill.setAttribute('aria-label', 'Countdown timer: click to start or pause, double-click to reset');
+    document.body.appendChild(this.pill);
+    this.interval = null;
+    this.groups = {};
+    this.pill.addEventListener('click', () => this.toggle());
+    this.pill.addEventListener('dblclick', () => { this.resetTo(this.duration); });
+    const orig = presentation.update.bind(presentation);
+    presentation.update = () => { orig(); this.apply(); };
+    this.apply();
+  }
+  apply() {
+    const slide = this.presentation.slides[this.presentation.current];
+    const secs = parseInt(slide.dataset.timer, 10);
+    const group = slide.dataset.timerGroup || null;
+    if (slide === this.slide) return;
+    /* leaving a grouped slide: bank its remaining time so the block clock
+       survives a detour, for example the poster slide inside the Do Now */
+    if (this.slide && this.group) {
+      this.groups[this.group] = { remaining: this.remaining, running: !!this.interval };
+    }
+    this.stop();
+    if (secs) {
+      this.slide = slide; this.group = group; this.duration = secs;
+      const saved = group && this.groups[group];
+      if (saved) {
+        this.remaining = saved.remaining;
+        this.render();
+        if (saved.running) this.start();
+      } else {
+        this.resetTo(secs);
+      }
+      this.pill.classList.add('show');
+    } else {
+      this.slide = null; this.group = null;
+      this.pill.classList.remove('show');
+    }
+  }
+  resetTo(secs) {
+    this.stop();
+    this.remaining = secs;
+    this.render();
+  }
+  toggle() { this.interval ? this.stop() : this.start(); }
+  start() {
+    if (this.remaining <= 0) this.remaining = this.duration;
+    this.pill.classList.add('running');
+    this.interval = setInterval(() => {
+      this.remaining -= 1;
+      if (this.remaining <= 0) { this.remaining = 0; this.stop(); }
+      this.render();
+    }, 1000);
+    this.render();
+  }
+  stop() {
+    clearInterval(this.interval);
+    this.interval = null;
+    this.pill.classList.remove('running');
+    if (this.remaining > 0) this.pill.classList.remove('urgent');
+  }
+  render() {
+    const m = Math.floor(this.remaining / 60), s = this.remaining % 60;
+    const label = this.remaining === 0 ? "TIME!" : (m + ':' + String(s).padStart(2, '0'));
+    this.pill.innerHTML = '⏱ ' + label + ' <span class="t-hint">' + (this.interval ? 'click = pause' : 'click = start') + '</span>';
+    this.pill.classList.toggle('urgent', this.remaining <= 10);
+  }
+}
+
+/* ===========================================
+   TWO COINS: Heads and Tails brain break.
+   Each coin flips on its own, and FLIP BOTH sends them together.
+   Players have to call both correctly to stay standing.
+   =========================================== */
+class Coin {
+  constructor(btnId, innerId, outId) {
+    this.btn = document.getElementById(btnId);
+    if (!this.btn) return;
+    this.inner = document.getElementById(innerId);
+    this.out = document.getElementById(outId);
+    this.rot = 0;
+    this.timer = null;
+    this.btn.addEventListener('click', () => this.flip());
+  }
+  flip() {
+    if (!this.btn) return;
+    const heads = Math.random() < 0.5;
+    const spins = 4 + Math.floor(Math.random() * 3);
+    this.rot += spins * 360 + (heads ? 0 : 180) - (this.rot % 360);
+    this.inner.style.transform = 'rotateY(' + this.rot + 'deg)';
+    this.out.textContent = '...';
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => { this.out.textContent = heads ? 'HEADS' : 'TAILS'; }, 1650);
+  }
+}
+class CoinPair {
+  constructor() {
+    this.a = new Coin('coinA', 'coinAInner', 'coinAOut');
+    this.b = new Coin('coinB', 'coinBInner', 'coinBOut');
+    const both = document.getElementById('flipBoth');
+    if (both) both.addEventListener('click', () => { this.a.flip(); this.b.flip(); });
+  }
+}
+
+/* ===========================================
+   FONT SCALE (session-only, no persistence)
+   =========================================== */
+class FontScaleController {
+  constructor() {
+    this.scale = 1;
+    this.min = 0.5; this.max = 2.0;
+    this.minus = document.getElementById('fsMinus');
+    this.plus  = document.getElementById('fsPlus');
+    this.label = document.getElementById('fsLabel');
+    this.minus.addEventListener('click', () => this.step(-0.1));
+    this.plus.addEventListener('click', () => this.step(0.1));
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '.') { e.preventDefault(); this.step(0.1); }
+      if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); this.step(-0.1); }
+    });
+    this.apply();
+  }
+  step(d) { this.scale = Math.round(Math.min(this.max, Math.max(this.min, this.scale + d)) * 10) / 10; this.apply(); }
+  apply() {
+    document.documentElement.style.setProperty('--font-scale', this.scale);
+    this.label.textContent = Math.round(this.scale * 100) + '%';
+    this.minus.disabled = this.scale <= this.min;
+    this.plus.disabled = this.scale >= this.max;
+    document.body.classList.toggle('scaled-up', this.scale > 1.2);
+    if (typeof fitSheets === 'function') requestAnimationFrame(fitSheets);
+  }
+}
+
+/* ===========================================
+   FULLSCREEN
+   =========================================== */
+class FullscreenController {
+  constructor() {
+    this.btn = document.getElementById('fullscreenBtn');
+    this.btn.addEventListener('click', () => this.toggle());
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); this.toggle(); return; }
+      if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (e.target.isContentEditable || ['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
+        this.toggle();
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const on = !!document.fullscreenElement;
+      this.btn.setAttribute('aria-label', on ? 'Exit fullscreen' : 'Fullscreen');
+    });
+  }
+  toggle() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  }
+}
+
+/* ===========================================
+   TEACHER TOGGLE (session-only)
+   =========================================== */
+class TeacherToggle {
+  constructor() {
+    this.btn = document.getElementById('teacherBtn');
+    this.hidden = false;
+    this.btn.addEventListener('click', () => this.toggle());
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'h' || e.key === 'H')) {
+        e.preventDefault(); this.toggle();
+      }
+    });
+    this.apply();
+  }
+  toggle() { this.hidden = !this.hidden; this.apply(); }
+  apply() {
+    document.body.classList.toggle('hide-teacher', this.hidden);
+    this.btn.classList.toggle('off', this.hidden);
+    this.btn.setAttribute('aria-label', this.hidden ? 'Show teacher callouts' : 'Hide teacher callouts');
+  }
+}
+
+/* ===========================================
+   SPEAKER NOTES + TRIPLE-TAP
+   =========================================== */
+class SpeakerNotesPanel {
+  constructor(presentation) {
+    this.presentation = presentation;
+    this.visible = false;
+    this.panel = document.getElementById('speakerNotes');
+    this.hint  = document.getElementById('notesHint');
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'n' || e.key === 'N') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (e.target.isContentEditable || ['INPUT','TEXTAREA','IFRAME'].includes(e.target.tagName)) return;
+        e.preventDefault(); this.toggle();
+      }
+    });
+    const orig = presentation.update.bind(presentation);
+    presentation.update = () => { orig(); this.updateContent(); };
+    this.updateContent();
+  }
+  toggle() {
+    this.visible = !this.visible;
+    this.panel.classList.toggle('visible', this.visible);
+    this.hint.style.display = this.visible ? 'none' : '';
+    this.updateContent();
+  }
+  updateContent() {
+    const slide = this.presentation.slides[this.presentation.current];
+    const notes = slide.dataset.notes || '(no notes for this slide)';
+    this.panel.querySelector('.notes-body').innerHTML = notes;
+    this.panel.querySelector('.notes-counter').textContent = 'Slide ' + (this.presentation.current + 1) + ' / ' + this.presentation.total;
+  }
+}
+
+/* ===========================================
+   CURSOR EFFECTS (trail + ink annotation)
+   =========================================== */
+class CursorEffects {
+  constructor() {
+    this.canDo = matchMedia('(hover: hover) and (pointer: fine)').matches &&
+                 !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!this.canDo) return;
+    this.canvas = document.getElementById('cursorFx');
+    this.ctx = this.canvas.getContext('2d');
+    /* accent = I piece cyan, matching the arcade palette */
+    this.accentRgba = (a) => 'rgba(77, 217, 230, ' + a + ')';
+    this.trail = []; this.strokes = []; this.current = null;
+    this.TRAIL_LIFE = 400; this.INK_FADE = 1500;
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+    this.bindEvents();
+    requestAnimationFrame(() => this.tick());
+  }
+  resize() {
+    const dpr = window.devicePixelRatio || 1;
+    this.canvas.width = innerWidth * dpr; this.canvas.height = innerHeight * dpr;
+    this.canvas.style.width = innerWidth + 'px'; this.canvas.style.height = innerHeight + 'px';
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0); this.ctx.scale(dpr, dpr);
+  }
+  bindEvents() {
+    window.addEventListener('mousemove', (e) => {
+      this.trail.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+      if (this.current) this.current.points.push({ x: e.clientX, y: e.clientY });
+    });
+    window.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      if (e.target.closest('button, a, [contenteditable], input, textarea, .nav-dots')) return;
+      this.current = { points: [{ x: e.clientX, y: e.clientY }], done: false };
+      this.strokes.push(this.current);
+    });
+    const endStroke = () => {
+      if (this.current) { this.current.done = true; this.current.finishedAt = performance.now(); this.current = null; }
+    };
+    window.addEventListener('mouseup', endStroke);
+    window.addEventListener('mouseleave', endStroke);
+  }
+  tick() {
+    const now = performance.now(); const ctx = this.ctx;
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    this.trail = this.trail.filter(p => now - p.t < this.TRAIL_LIFE);
+    for (const p of this.trail) {
+      const age = (now - p.t) / this.TRAIL_LIFE;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 7 * (1 - age * 0.35), 0, Math.PI * 2);
+      ctx.fillStyle = this.accentRgba((1 - age) * 0.55);
+      ctx.shadowBlur = 12; ctx.shadowColor = this.accentRgba(0.9);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    for (let i = this.strokes.length - 1; i >= 0; i--) {
+      const s = this.strokes[i]; let alpha = 1;
+      if (s.done) {
+        const age = now - s.finishedAt;
+        if (age >= this.INK_FADE) { this.strokes.splice(i, 1); continue; }
+        alpha = 1 - age / this.INK_FADE;
+      }
+      if (s.points.length < 2) continue;
+      ctx.beginPath(); ctx.moveTo(s.points[0].x, s.points[0].y);
+      for (let j = 1; j < s.points.length; j++) ctx.lineTo(s.points[j].x, s.points[j].y);
+      ctx.strokeStyle = this.accentRgba(alpha); ctx.lineWidth = 4;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.shadowBlur = 14; ctx.shadowColor = this.accentRgba(alpha);
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    requestAnimationFrame(() => this.tick());
+  }
+}
+
+/* ===========================================
+   INLINE EDITOR with AUTOSAVE.
+   Edits save to localStorage as you type and reload with the page, on this
+   machine, keyed to DECK_VERSION (a deck push purges them, see STORAGE POLICY).
+   The student sheet replica is excluded on purpose: it has to keep saying
+   exactly what the printed sheet says.
+   =========================================== */
+class InlineEditor {
+  constructor(presentation) {
+    this.isActive = false;
+    this.presentation = presentation;
+    this.selector = 'h1, h2, h3, p, li, .tblock, .chip, .tcall, .lede, .eyebrow, .coin-name';
+    this.saveTimer = null;
+    this.restoreEdits();
+    document.addEventListener('input', (e) => {
+      if (!this.isActive || !e.target.isContentEditable) return;
+      clearTimeout(this.saveTimer);
+      this.saveTimer = setTimeout(() => this.saveEdits(), 300);
+    });
+    this.toggleBtn = document.getElementById('editToggle');
+    this.pillBtn = document.getElementById('editBtn');
+    const hotzone = document.querySelector('.edit-hotzone');
+    let hideTimeout = null;
+    this.toggleBtn.addEventListener('click', () => this.toggleEditMode());
+    this.pillBtn.addEventListener('click', () => this.toggleEditMode());
+    hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); this.toggleBtn.classList.add('show'); });
+    hotzone.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!this.isActive) this.toggleBtn.classList.remove('show'); }, 400); });
+    this.toggleBtn.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+    this.toggleBtn.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!this.isActive) this.toggleBtn.classList.remove('show'); }, 400); });
+    hotzone.addEventListener('click', () => this.toggleEditMode());
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable') && !e.metaKey && !e.ctrlKey) this.toggleEditMode();
+      if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); this.exportFile(); }
+    });
+  }
+  toggleEditMode() {
+    this.isActive = !this.isActive;
+    document.body.classList.toggle('edit-active', this.isActive);
+    this.toggleBtn.classList.toggle('active', this.isActive);
+    this.pillBtn.classList.toggle('active', this.isActive);
+    this.presentation.slides.forEach(slide => {
+      this.editableIn(slide).forEach(el => {
+        if (this.isActive) el.setAttribute('contenteditable', 'true');
+        else el.removeAttribute('contenteditable');
+      });
+    });
+    if (!this.isActive) { clearTimeout(this.saveTimer); this.saveEdits(); }
+  }
+  /* Elements addressed as slideIndex:elementIndex; DECK_VERSION keying guarantees
+     the addresses match the markup, so a restore can never garble a changed deck. */
+  editableIn(slide) {
+    return Array.from(slide.querySelectorAll(this.selector)).filter(el => !el.closest('.sheet'));
+  }
+  saveEdits() {
+    const edits = {};
+    this.presentation.slides.forEach((slide, si) => {
+      this.editableIn(slide).forEach((el, ei) => {
+        const orig = el.dataset.origHtml;
+        if (orig !== undefined && el.innerHTML !== orig) edits[si + ':' + ei] = el.innerHTML;
+      });
+    });
+    try { localStorage.setItem(EDIT_KEY, JSON.stringify(edits)); } catch (e) {}
+  }
+  restoreEdits() {
+    let edits = {};
+    try { edits = JSON.parse(localStorage.getItem(EDIT_KEY) || '{}'); } catch (e) {}
+    this.presentation.slides.forEach((slide, si) => {
+      this.editableIn(slide).forEach((el, ei) => {
+        if (el.dataset.origHtml === undefined) el.dataset.origHtml = el.innerHTML;
+        const saved = edits[si + ':' + ei];
+        if (saved !== undefined) el.innerHTML = saved;
+      });
+    });
+  }
+  exportFile() {
+    /* Strip edit state so the saved file opens cleanly */
+    const editableEls = Array.from(document.querySelectorAll('[contenteditable]'));
+    editableEls.forEach(el => el.removeAttribute('contenteditable'));
+    const wasActive = this.isActive;
+    document.body.classList.remove('edit-active');
+    this.toggleBtn.classList.remove('active', 'show');
+    this.pillBtn.classList.remove('active');
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    if (wasActive) {
+      document.body.classList.add('edit-active');
+      editableEls.forEach(el => el.setAttribute('contenteditable', 'true'));
+      this.toggleBtn.classList.add('active');
+      this.pillBtn.classList.add('active');
+    }
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'g10-week1-welcome-ict.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+}
+
+/* ===========================================
+   BOOT
+   Sheets are cloned first so the inline editor sees the final markup.
+   =========================================== */
+buildSheets();
+const presentation = new SlidePresentation();
+const speakerNotes = new SpeakerNotesPanel(presentation);
+presentation.onTripleTap = () => speakerNotes.toggle();
+new IsamsReminder(presentation);
+new SlideTimer(presentation);
+new CoinPair();
+new FontScaleController();
+new FullscreenController();
+new TeacherToggle();
+new CursorEffects();
+new InlineEditor(presentation);
+
+/* Sheets are measured once the pixel fonts have actually landed, because they
+   change every box height, then again on any resize. */
+fitSheets();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitSheets());
+setTimeout(fitSheets, 900);
+let fitTimer = null;
+window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitSheets, 160); });
+
+/* The key hint has done its job after a few seconds, and it sits over the
+   bottom corner of the sheet, so it takes itself away. */
+setTimeout(() => {
+  const hint = document.getElementById('notesHint');
+  if (hint) { hint.style.transition = 'opacity .6s ease'; hint.style.opacity = '0'; }
+}, 9000);
+
+/* Exposed so a person or a verification script can drive the deck from the
+   console: window.deck.presentation.goTo(n), window.deck.DECK_VERSION. */
+window.deck = { presentation: presentation, DECK_VERSION: DECK_VERSION, EDIT_KEY: EDIT_KEY, fitSheets: fitSheets };
+</script>
+</body>
+</html>
