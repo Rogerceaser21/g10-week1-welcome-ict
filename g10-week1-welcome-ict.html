@@ -1161,7 +1161,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
    Any deck push bumps DECK_VERSION (push-update.sh does it automatically), which purges
    stored edits so a stale edit can never be restored over a restructured deck.
    Everything else (font scale, teacher toggle, iSAMS state, timers) stays session-only. */
-const DECK_VERSION = 'v20260831-174658';
+const DECK_VERSION = 'v20260831-180014';
 const EDIT_KEY = 'g10w1-edits:' + DECK_VERSION;
 try { Object.keys(localStorage).forEach(k => { if (k !== EDIT_KEY) localStorage.removeItem(k); }); } catch (e) {}
 
@@ -1241,6 +1241,47 @@ function fitSheets() {
     if (!changed) break;
   }
 }
+
+/* Last line of defence for short projectors. Anything a slide still overruns
+   after the sheets are fitted gets absorbed here: grow the content box until
+   nothing is clipped, then scale the whole box back down to the slide. The
+   slide itself keeps clipping, so a slide can never scroll. */
+function fitSlides() {
+  document.querySelectorAll('.slide-content').forEach(c => {
+    c.style.transform = ''; c.style.height = ''; c.style.maxHeight = ''; c.style.flex = '';
+    const over = slideOverflow(c);
+    if (over < 4) return;
+    const h = c.clientHeight;
+    if (!h) return;
+    const grown = h + over + 20;
+    let scale = Math.max(0.55, h / grown);
+    c.style.flex = 'none';
+    c.style.height = grown + 'px';
+    c.style.maxHeight = 'none';
+    c.style.transformOrigin = 'center center';
+    c.style.transform = 'scale(' + scale + ')';
+    /* second look, against the slide box that actually does the clipping:
+       asymmetric padding can leave a few pixels poking out, so shave them. */
+    const slide = c.closest('.slide');
+    for (let pass = 0; pass < 4 && slide; pass++) {
+      const sr = slide.getBoundingClientRect();
+      let minY = Infinity, maxY = -Infinity;
+      Array.from(c.children).forEach(ch => {
+        if (getComputedStyle(ch).position === 'absolute') return;
+        const q = ch.getBoundingClientRect();
+        if (!q.height) return;
+        minY = Math.min(minY, q.top); maxY = Math.max(maxY, q.bottom);
+      });
+      if (minY === Infinity) break;
+      const spill = Math.max(0, sr.top - minY) + Math.max(0, maxY - sr.bottom);
+      if (spill < 3) break;
+      scale = Math.max(0.5, scale * (1 - (spill + 8) / h));
+      c.style.transform = 'scale(' + scale + ')';
+    }
+  });
+}
+
+function fitAll() { fitSheets(); fitSlides(); }
 
 /* ===========================================
    SLIDE PRESENTATION CONTROLLER
@@ -1532,7 +1573,7 @@ class FontScaleController {
     this.minus.disabled = this.scale <= this.min;
     this.plus.disabled = this.scale >= this.max;
     document.body.classList.toggle('scaled-up', this.scale > 1.2);
-    if (typeof fitSheets === 'function') requestAnimationFrame(fitSheets);
+    if (typeof fitAll === 'function') requestAnimationFrame(fitAll);
   }
 }
 
@@ -1809,11 +1850,11 @@ new InlineEditor(presentation);
 
 /* Sheets are measured once the pixel fonts have actually landed, because they
    change every box height, then again on any resize. */
-fitSheets();
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitSheets());
-setTimeout(fitSheets, 900);
+fitAll();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitAll());
+setTimeout(fitAll, 900);
 let fitTimer = null;
-window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitSheets, 160); });
+window.addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitAll, 160); });
 
 /* The key hint has done its job after a few seconds, and it sits over the
    bottom corner of the sheet, so it takes itself away. */
@@ -1824,7 +1865,7 @@ setTimeout(() => {
 
 /* Exposed so a person or a verification script can drive the deck from the
    console: window.deck.presentation.goTo(n), window.deck.DECK_VERSION. */
-window.deck = { presentation: presentation, DECK_VERSION: DECK_VERSION, EDIT_KEY: EDIT_KEY, fitSheets: fitSheets };
+window.deck = { presentation: presentation, DECK_VERSION: DECK_VERSION, EDIT_KEY: EDIT_KEY, fit: fitAll };
 </script>
 </body>
 </html>
