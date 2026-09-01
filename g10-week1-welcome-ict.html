@@ -63,6 +63,12 @@
   --small-size:calc(clamp(0.66rem, min(1.33vw, 1.94vh), 2.15rem) * var(--font-scale));
 
   --slide-padding:clamp(0.9rem, 3.2vw, 3.4rem);
+  /* every piece of bottom chrome sits this far off the floor: the navigation
+     bar, the control pill and the slide number. One token, so the bottom
+     gutter below is a sum rather than a guess, and so the chrome band can be
+     kept to its floor (a 44px touch target close to the edge) instead of the
+     slides paying for it. */
+  --chrome-bottom:clamp(4px, 0.5vh, 8px);
   --content-gap:clamp(0.5rem, 1.5vw, 1.5rem);
   --element-gap:clamp(0.25rem, 0.72vw, 0.78rem);
   --ease-out-expo:cubic-bezier(0.16, 1, 0.3, 1);
@@ -99,10 +105,14 @@ html { scroll-snap-type:y mandatory; scroll-behavior:smooth; }
   /* top gutter keeps the timer pill and the iSAMS pop-up off the slide's own words */
   padding-top:max(var(--slide-padding), clamp(64px, 9.5vh, 100px));
   /* bottom gutter does the same job for the navigation bar, the control pill and
-     the slide number. Content is centred in what is left, so a slide with room
-     to spare simply sits a little higher; nothing is scaled to pay for it, and
-     the sweep at 1512x982 and 3440x1440 confirms no slide is. */
-  padding-bottom:max(var(--slide-padding), clamp(62px, 7.6vh, 96px));
+     the slide number. It is measured, not guessed: the deepest bottom chrome is
+     the navigation bar: 44px, the touch-target floor, sitting --chrome-bottom
+     off the floor, so the band is 48.9px at 1512x982 and 51.2px at 3440x1440.
+     The gutter is that band plus a few pixels of daylight. Chrome pays for its
+     own room here; no picture and no type pays for it. Content is centred in
+     what is left, so a slide with room to spare simply sits a little higher,
+     and nothing is ever scaled. */
+  padding-bottom:max(var(--slide-padding), clamp(54px, 5.6vh, 58px));
   max-width:min(94vw, 2100px); margin:0 auto; width:100%; position:relative; z-index:3;
 }
 .card, .container, .content-box { max-width:min(90vw, 1000px); max-height:min(80vh, 700px); }
@@ -309,11 +319,14 @@ ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
 /* poster, shown as big as the slide allows */
 /* the poster clears the top chrome the same way a slide-content does */
 .poster-wrap { flex:1; min-height:0; display:flex; align-items:center; justify-content:center;
-  padding:clamp(0.4rem,1.6vw,1.2rem); padding-top:clamp(64px, 9.5vh, 100px); position:relative; z-index:3; }
+  padding:clamp(0.4rem,1.6vw,1.2rem); padding-top:clamp(64px, 9.5vh, 100px); padding-bottom:0;
+  position:relative; z-index:3; }
 /* The poster slide carries no .slide-content, so this row is the one bit of
-   slide copy that sits on the floor of the window. It keeps clear of the
-   navigation bar itself; every other slide's content already does. */
-.poster-foot { padding:0 1rem clamp(66px,7.4vh,88px); }
+   slide copy that sits on the floor of the window, and it is the row that has
+   to clear the navigation bar. The clearance is taken out of the wrap's own
+   bottom padding (now zero, the foot follows the poster immediately anyway)
+   and out of the tighter bar, so the poster itself keeps its full 72vh. */
+.poster-foot { padding:0 1rem clamp(52px,5.43vh,57px); }
 .poster-wrap img { max-height:min(72vh, 100%); max-width:92vw; object-fit:contain; background:#fff;
   box-shadow:0 0 0 var(--px) var(--panel-2), 12px 12px 0 rgba(0,0,0,.35); }
 
@@ -338,12 +351,11 @@ ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
 .sheet-fig { position:relative; align-self:center; margin-inline:auto; width:100%;
   max-width:min(26vw, 36vh, 520px);
   display:flex; flex-direction:column; align-items:center; gap:clamp(6px, 0.9vh, 12px); }
-/* 88vh, not 94vh: the bottom gutter that keeps the navigation bar off the words
-   costs the tall sheet slides a band of height, and this is what pays for it.
-   The point is that the fit engine still never fires on these slides, which is
-   the invariant the readability pass set; the thumbnail is 6 percent smaller
-   and the full-size read is one click away in the lightbox, as designed. */
-.sheet-fig.big { max-width:min(62vw, 88vh, 1500px); }
+/* 94vh. Slide 4 is the sheet walkthrough and the sheet is shown as big as the
+   slide allows, so the navigation bar never buys its room from this figure: the
+   bar was made tighter and the bottom gutter cut to match instead. Measured at
+   both of Igor's window shapes, the sheet clears the bar with room over. */
+.sheet-fig.big { max-width:min(62vw, 94vh, 1500px); }
 /* every ring zone is a percentage rectangle measured off the exported page,
    so a ring always lands on the real box, at any projector size */
 .sh-zone { position:absolute; left:var(--l); top:var(--t); width:var(--w); height:var(--h);
@@ -453,10 +465,10 @@ body.hide-teacher [data-teacher-only="true"] { display:none; }
 .nav-dots { position:fixed; right:clamp(6px,1vw,14px); top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:7px; z-index:330; }
 .nav-dots button { width:9px; height:9px; border:0; background:rgba(255,255,255,.25); cursor:pointer; padding:0; }
 .nav-dots button.active { background:var(--p-o); }
-.slide-num { position:fixed; right:clamp(10px,1.5vw,20px); bottom:clamp(8px,1.5vh,16px); z-index:9400;
+.slide-num { position:fixed; right:clamp(10px,1.5vw,20px); bottom:var(--chrome-bottom); z-index:9400;
   font-family:var(--font-label); font-size:20px; background:var(--panel); color:var(--p-o); padding:2px 10px;
   box-shadow:inset -3px -3px 0 rgba(0,0,0,.4); }
-.font-scale-ctrl { position:fixed; left:clamp(8px,1vw,16px); bottom:clamp(8px,1.5vh,16px); z-index:9500;
+.font-scale-ctrl { position:fixed; left:clamp(8px,1vw,16px); bottom:var(--chrome-bottom); z-index:9500;
   display:flex; align-items:center; gap:6px; background:var(--panel); padding:5px 8px;
   font-family:var(--font-label); color:#fff; font-size:18px; box-shadow:inset -3px -3px 0 rgba(0,0,0,.4); }
 .fs-btn { border:0; background:#2A3350; color:#fff; font-family:var(--font-label); font-size:18px; padding:2px 9px; cursor:pointer; }
@@ -538,12 +550,15 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
    that is still the pencil or the E key, nothing else.
    The bar lives inside the bottom gutter the slides already leave for the
    control pill and the slide number, so it costs the slides no room and no
-   type had to be shrunk to make space for it.
+   type and no picture had to be shrunk to make space for it. It is built to
+   the touch-target floor (44px) and sits close to the edge on purpose: that is
+   what lets the gutter stay small enough for the sheet and the poster to keep
+   their full size. The label type is untouched, so it still reads across a room.
    =========================================== */
-.deck-nav { position:fixed; left:50%; transform:translateX(-50%); bottom:clamp(8px,1.5vh,16px);
+.deck-nav { position:fixed; left:50%; transform:translateX(-50%); bottom:var(--chrome-bottom);
   z-index:9450; display:flex; align-items:stretch; gap:clamp(5px,0.6vw,10px); }
 .dn-btn { font-family:var(--font-label); font-size:clamp(20px,2.9vh,36px); line-height:1;
-  min-height:48px; min-width:56px; display:inline-flex; align-items:center; justify-content:center; gap:0.35em;
+  min-height:44px; min-width:56px; display:inline-flex; align-items:center; justify-content:center; gap:0.35em;
   padding:0 clamp(0.45em,0.9vw,0.85em); border:0; cursor:pointer; letter-spacing:.05em;
   background:var(--panel); color:#EEF2FF;
   box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.45),
@@ -1376,7 +1391,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
    Any deck push bumps DECK_VERSION (push-update.sh does it automatically), which purges
    stored edits so a stale edit can never be restored over a restructured deck.
    Everything else (font scale, teacher toggle, iSAMS state, timers) stays session-only. */
-const DECK_VERSION = 'v20260901-180027';
+const DECK_VERSION = 'v20260901-191254';
 const EDIT_KEY = 'g10w1-edits:' + DECK_VERSION;
 try { Object.keys(localStorage).forEach(k => { if (k !== EDIT_KEY) localStorage.removeItem(k); }); } catch (e) {}
 
