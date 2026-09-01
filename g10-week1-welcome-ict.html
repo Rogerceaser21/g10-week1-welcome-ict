@@ -652,7 +652,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
 <!-- ================= PERIOD 1 · 08:30 to 09:05 ================= -->
 
 <!-- 1 · Title -->
-<section class="slide g-arcade" data-notes="<strong>Threshold, 08:30.</strong> Stand at the door of IG04 as they arrive from IF05. Greet every student by name if you can, uniform and appearance glance before anyone comes in (Expectations s35), fixes go out before entry, not after. <strong>Presenter keys:</strong> N notes &middot; S sheet full screen &middot; E edit (autosaves on this machine) &middot; F fullscreen &middot; &#8984;&#8679;H hides teacher callouts &middot; arrow keys move, and a slide with a task shows its timer top left. <strong>The red iSAMS pop-up arrives on slide 2 and follows every slide until you press &#10003; done.</strong>">
+<section class="slide g-arcade" data-notes="<strong>Threshold, 08:30.</strong> Stand at the door of IG04 as they arrive from IF05. Greet every student by name if you can, uniform and appearance glance before anyone comes in (Expectations s35), fixes go out before entry, not after. <strong>Presenter keys:</strong> N notes &middot; S sheet full screen &middot; C cold call name picker &middot; E edit (autosaves on this machine) &middot; F fullscreen &middot; &#8984;&#8679;H hides teacher callouts &middot; arrow keys move, and a slide with a task shows its timer top left. <strong>No clicker?</strong> The BACK, COLD CALL and NEXT buttons along the bottom do the same job with a finger, and NEXT reveals the next line before it changes slide. Inside the picker, forward draws the next name and back closes it. <strong>The red iSAMS pop-up arrives on slide 2 and follows every slide until you press &#10003; done.</strong>">
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall I" style="left:8%;  animation-duration:38s; animation-delay:-4s"></div>
     <div class="tetfall T" style="left:24%; animation-duration:52s; animation-delay:-22s"></div>
@@ -1376,7 +1376,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
    Any deck push bumps DECK_VERSION (push-update.sh does it automatically), which purges
    stored edits so a stale edit can never be restored over a restructured deck.
    Everything else (font scale, teacher toggle, iSAMS state, timers) stays session-only. */
-const DECK_VERSION = 'v20260901-175436';
+const DECK_VERSION = 'v20260901-180027';
 const EDIT_KEY = 'g10w1-edits:' + DECK_VERSION;
 try { Object.keys(localStorage).forEach(k => { if (k !== EDIT_KEY) localStorage.removeItem(k); }); } catch (e) {}
 
@@ -2424,12 +2424,21 @@ class ColdCallPicker {
     const hold = (e) => { if (this.isOpen() && !e.target.closest('.pk-scroll')) e.preventDefault(); };
     this.wrap.addEventListener('wheel', hold, { passive: false });
     this.wrap.addEventListener('touchmove', hold, { passive: false });
-    const DRAW_KEYS = ['ArrowRight', 'ArrowDown', 'PageDown', ' '];
+    /* A presenter clicker has two buttons and no Esc, so it gets both jobs:
+       forward draws the next name, which is the common thing, and back closes
+       the picker and hands the deck back. */
+    const DRAW_KEYS  = ['ArrowRight', 'ArrowDown', 'PageDown', ' '];
+    const CLOSE_KEYS = ['ArrowLeft', 'ArrowUp', 'PageUp', 'Escape'];
     document.addEventListener('keydown', (e) => {
-      if (!this.isOpen()) return;
       if (e.target.isContentEditable || ['INPUT','TEXTAREA','IFRAME'].includes(e.target.tagName)) return;
-      if (e.key === 'Escape') { e.preventDefault(); this.close(); return; }
-      /* a clicker in the hand draws the next name, which is the common thing */
+      if (!this.isOpen()) {
+        /* C for cold call, the same shape as N notes, S sheet, E edit, F fullscreen */
+        if ((e.key === 'c' || e.key === 'C') && !e.metaKey && !e.ctrlKey && !e.altKey && !sheetZoomOpen()) {
+          e.preventDefault(); this.open();
+        }
+        return;
+      }
+      if (CLOSE_KEYS.includes(e.key) && !e.metaKey && !e.ctrlKey) { e.preventDefault(); this.close(); return; }
       if (DRAW_KEYS.includes(e.key) && !e.metaKey && !e.ctrlKey) { e.preventDefault(); if (!e.repeat) this.draw(); }
     });
   }
