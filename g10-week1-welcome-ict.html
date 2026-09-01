@@ -49,18 +49,37 @@
   --font-body:'Inter', system-ui, -apple-system, sans-serif;
 
   --font-scale:1;
-  --title-size:calc(clamp(1.25rem, 3.4vw, 2.5rem) * var(--font-scale));
-  --h2-size:calc(clamp(0.92rem, 2.3vw, 1.55rem) * var(--font-scale));
-  --h3-size:calc(clamp(0.78rem, 1.7vw, 1.1rem) * var(--font-scale));
-  --body-size:calc(clamp(0.82rem, 1.5vw, 1.15rem) * var(--font-scale));
-  --label-size:calc(clamp(1.05rem, 1.9vw, 1.5rem) * var(--font-scale));
-  --small-size:calc(clamp(0.66rem, 1vw, 0.9rem) * var(--font-scale));
+  /* Base type is driven by the SHORT side of the window (vh), because a slide is
+     one screen tall and height is what runs out first. Every size below was set by
+     measuring all 32 slides at 1512x850 and 3440x1400 and taking the largest value
+     at which nothing overflows, so the deck never has to shrink text to fit and
+     Igor never has to reach for A+ mid-lesson. The vw term is only a guard for a
+     tall narrow window; the rem cap is only a guard for an enormous one. */
+  --title-size:calc(clamp(1.25rem, min(3.70vw, 5.39vh), 5.85rem) * var(--font-scale));
+  --h2-size:calc(clamp(0.92rem, min(2.29vw, 3.34vh), 3.65rem) * var(--font-scale));
+  --h3-size:calc(clamp(0.78rem, min(1.63vw, 2.37vh), 2.6rem) * var(--font-scale));
+  --body-size:calc(clamp(0.82rem, min(1.70vw, 2.48vh), 2.7rem) * var(--font-scale));
+  --label-size:calc(clamp(1.05rem, min(2.22vw, 3.23vh), 3.55rem) * var(--font-scale));
+  --small-size:calc(clamp(0.66rem, min(1.33vw, 1.94vh), 2.15rem) * var(--font-scale));
 
-  --slide-padding:clamp(1rem, 4vw, 4rem);
-  --content-gap:clamp(0.5rem, 2vw, 2rem);
-  --element-gap:clamp(0.25rem, 1vw, 1rem);
+  --slide-padding:clamp(0.9rem, 3.2vw, 3.4rem);
+  --content-gap:clamp(0.5rem, 1.5vw, 1.5rem);
+  --element-gap:clamp(0.25rem, 0.72vw, 0.78rem);
   --ease-out-expo:cubic-bezier(0.16, 1, 0.3, 1);
   --duration-normal:0.6s;
+}
+/* A 21:9 window (Igor's 3440x1440) has width the 16:9 shapes do not, so the same
+   slide height carries a bigger base before anything overflows. Measured the same
+   way: the ceiling at 3440x1440 is 44.4px of body text, this asks for 41.8px. */
+@media (min-aspect-ratio: 2/1) {
+  :root {
+    --title-size:calc(clamp(1.25rem, min(3.70vw, 6.30vh), 5.85rem) * var(--font-scale));
+    --h2-size:calc(clamp(0.92rem, min(2.29vw, 3.90vh), 3.65rem) * var(--font-scale));
+    --h3-size:calc(clamp(0.78rem, min(1.63vw, 2.77vh), 2.6rem) * var(--font-scale));
+    --body-size:calc(clamp(0.82rem, min(1.70vw, 2.90vh), 2.7rem) * var(--font-scale));
+    --label-size:calc(clamp(1.05rem, min(2.22vw, 3.78vh), 3.55rem) * var(--font-scale));
+    --small-size:calc(clamp(0.66rem, min(1.33vw, 2.27vh), 2.15rem) * var(--font-scale));
+  }
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 
@@ -79,7 +98,7 @@ html { scroll-snap-type:y mandatory; scroll-behavior:smooth; }
   max-height:100%; overflow:hidden; padding:var(--slide-padding);
   /* top gutter keeps the timer pill and the iSAMS pop-up off the slide's own words */
   padding-top:max(var(--slide-padding), clamp(64px, 9.5vh, 100px));
-  max-width:1180px; margin:0 auto; width:100%; position:relative; z-index:3;
+  max-width:min(94vw, 2100px); margin:0 auto; width:100%; position:relative; z-index:3;
 }
 .card, .container, .content-box { max-width:min(90vw, 1000px); max-height:min(80vh, 700px); }
 .feature-list, .bullet-list { gap:clamp(0.4rem, 1vh, 1rem); }
@@ -139,7 +158,7 @@ body { font-family:var(--font-body); font-size:var(--body-size); color:#F2F5FF; 
   -webkit-mask-image:linear-gradient(transparent, #000 65%);
           mask-image:linear-gradient(transparent, #000 65%);
 }
-.g-stack .slide-content { padding-bottom:clamp(3rem, 10vh, 6rem); }
+.g-stack .slide-content { padding-bottom:clamp(2.4rem, 5.6vh, 4.4rem); }
 .g-paper { background:var(--paper); color:var(--ink); }
 .g-paper::before {
   content:""; position:absolute; inset:0; z-index:0; opacity:.5;
@@ -187,11 +206,11 @@ body { font-family:var(--font-body); font-size:var(--body-size); color:#F2F5FF; 
 /* ===========================================
    TYPE
    =========================================== */
-h1 { font-family:var(--font-display); font-size:var(--title-size); line-height:1.5; color:#fff;
+h1 { font-family:var(--font-display); font-size:var(--title-size); line-height:1.38; color:#fff;
      text-shadow:0 var(--px) 0 var(--edge), 0 0 26px rgba(77,217,230,.30); text-wrap:balance; letter-spacing:.02em; }
-h2 { font-family:var(--font-display); font-size:var(--h2-size); line-height:1.6; color:#fff;
+h2 { font-family:var(--font-display); font-size:var(--h2-size); line-height:1.45; color:#fff;
      text-shadow:0 3px 0 var(--edge); margin-bottom:var(--content-gap); text-wrap:balance; }
-.eyebrow { font-family:var(--font-label); font-size:var(--label-size); color:var(--p-o); margin-bottom:0.35em; letter-spacing:.04em; }
+.eyebrow { font-family:var(--font-label); font-size:var(--label-size); color:var(--p-o); margin-bottom:0.24em; letter-spacing:.04em; }
 .lede { font-family:var(--font-label); font-size:var(--label-size); color:#E8EEFF; line-height:1.35; }
 .small { font-size:var(--small-size); color:var(--mist); }
 .verb { font-weight:800; font-style:italic; }
@@ -201,8 +220,8 @@ b, strong { font-weight:800; }
    BLOCKS: every card is a tetromino cell
    =========================================== */
 .tblock {
-  background:var(--panel); color:#EEF2FF; padding:clamp(0.55rem,1.5vw,1.05rem) clamp(0.7rem,1.7vw,1.2rem);
-  border-radius:0; font-size:var(--body-size); line-height:1.45;
+  background:var(--panel); color:#EEF2FF; padding:clamp(0.45rem,1.05vw,0.8rem) clamp(0.7rem,1.7vw,1.2rem);
+  border-radius:0; font-size:var(--body-size); line-height:1.4;
   box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.45),
              inset var(--px) var(--px) 0 rgba(255,255,255,.14);
 }
@@ -236,8 +255,8 @@ b, strong { font-weight:800; }
 .linkbtn.gold { background:var(--p-o); }
 
 ul.steps { list-style:none; display:flex; flex-direction:column; gap:var(--element-gap); counter-reset:st; }
-ul.steps li { counter-increment:st; background:var(--panel); padding:0.5em 0.8em 0.5em 2.6em; position:relative;
-  font-size:var(--body-size); line-height:1.45;
+ul.steps li { counter-increment:st; background:var(--panel); padding:0.4em 0.8em 0.4em 2.6em; position:relative;
+  font-size:var(--body-size); line-height:1.4;
   box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.45), inset var(--px) var(--px) 0 rgba(255,255,255,.12); }
 ul.steps li::before { content:counter(st); position:absolute; left:0; top:0; bottom:0; width:2em;
   display:flex; align-items:center; justify-content:center; font-family:var(--font-display);
@@ -249,15 +268,20 @@ ul.steps li:nth-child(5)::before { background:var(--p-z); }
 ul.steps li:nth-child(6)::before { background:var(--p-j); }
 
 ul.plain { list-style:none; display:flex; flex-direction:column; gap:var(--element-gap); }
-ul.plain li { background:var(--panel); padding:0.5em 0.85em; font-size:var(--body-size); line-height:1.45;
+ul.plain li { background:var(--panel); padding:0.4em 0.85em; font-size:var(--body-size); line-height:1.4;
   box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.45), inset var(--px) var(--px) 0 rgba(255,255,255,.12); }
 ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
 
 .two-col { display:grid; grid-template-columns:1fr auto; gap:clamp(0.9rem,2.6vw,2.2rem); align-items:center; }
 .two-col.img-left { grid-template-columns:auto 1fr; }
-@media (max-width:900px) { .two-col { grid-template-columns:1fr; } .col-img { display:none; } }
-@media (max-height:620px) { .col-img { display:none; } }
-body.scaled-up .col-img { display:none; }
+/* The text column takes whatever the thumbnail leaves, up to a sane reading width. */
+.two-col > div:not(.col-img) { max-width:min(100%, 1700px); }
+/* On a genuinely narrow or short screen the sheet PICTURE stands down, but its
+   "Open sheet" button stays, so the sheet is always one tap away. The old rules
+   hid the whole figure, and body.scaled-up hid it on every screen the moment the
+   font scale passed 1.2, which is exactly when Igor most wanted to see it. */
+@media (max-width:900px) { .two-col { grid-template-columns:1fr; } .col-img:not(.sheet-fig) { display:none; } .sheet-fig .sheet { display:none; } }
+@media (max-height:520px) { .col-img:not(.sheet-fig) { display:none; } .sheet-fig .sheet { display:none; } }
 
 .line-order { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(3,1fr); gap:4px; counter-reset:lq; }
 .line-order li { counter-increment:lq; background:var(--paper); color:var(--ink); font-family:var(--font-label);
@@ -299,8 +323,13 @@ body.scaled-up .col-img { display:none; }
    or the ring rectangles stop landing on the right box */
 .sheet-img { display:block; width:100%; height:auto; max-height:none; aspect-ratio:3000 / 1688;
   position:relative; z-index:0; }
-.sheet-fig { position:relative; align-self:center; width:100%; max-width:min(52vw, 640px); }
-.sheet-fig.big { max-width:min(94vw, 1400px); }
+/* The thumbnail is bounded by the window HEIGHT as well as its width, so the sheet
+   can never grow into the space the words need and can never be shrunk away to
+   rescue a slide. Detail lives in the lightbox, one button or one tap away. */
+.sheet-fig { position:relative; align-self:center; margin-inline:auto; width:100%;
+  max-width:min(26vw, 36vh, 520px);
+  display:flex; flex-direction:column; align-items:center; gap:clamp(6px, 0.9vh, 12px); }
+.sheet-fig.big { max-width:min(62vw, 94vh, 1500px); }
 /* every ring zone is a percentage rectangle measured off the exported page,
    so a ring always lands on the real box, at any projector size */
 .sh-zone { position:absolute; left:var(--l); top:var(--t); width:var(--w); height:var(--h);
@@ -449,6 +478,43 @@ body.hide-teacher [data-teacher-only="true"] { display:none; }
 .edit-toggle.active { opacity:1; pointer-events:auto; }
 body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outline-offset:2px; }
 
+/* ===========================================
+   THE STUDENT SHEET LIGHTBOX
+   The sheet sits in the slide as a thumbnail with its ring, and opens full
+   screen from the "Open sheet" button, from the thumbnail itself, or with the
+   S key. Esc, the close button, a click anywhere off the page, or any deck
+   navigation key closes it. While it is open the deck's own arrows do nothing,
+   so a presenter clicker can never walk the class off the slide underneath.
+   No invisible hot zone anywhere: the only way in is a labelled button, the
+   sheet picture itself, or S.
+   =========================================== */
+.sheet-open { font-family:var(--font-label); font-size:calc(clamp(1rem,min(1.9vw,2.7vh),2.1rem) * var(--font-scale));
+  background:var(--p-i); color:var(--ink); border:0; padding:0.18em 0.8em; cursor:zoom-in;
+  display:inline-flex; align-items:center; gap:0.45em; letter-spacing:.03em; line-height:1.25;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.32), inset var(--px) var(--px) 0 rgba(255,255,255,.4); }
+.sheet-open:hover { filter:brightness(1.1); }
+.sheet-open:focus-visible { outline:3px solid var(--p-o); outline-offset:3px; }
+.sheet .sheet-img { cursor:zoom-in; }
+
+/* The bands top and bottom are the close button's and the hint's own room, so
+   the page itself is never sat on by either. The width is driven by the window
+   HEIGHT (the sheet is a 3000x1688 landscape page) so it fills whatever is left. */
+.sheet-zoom { position:fixed; inset:0; z-index:10050; display:none;
+  align-items:center; justify-content:center; background:rgba(5,7,14,.92);
+  padding:clamp(52px,7vh,78px) clamp(12px,1.4vw,26px) clamp(40px,5vh,60px);
+  opacity:0; transition:opacity .22s var(--ease-out-expo); }
+.sheet-zoom.open { display:flex; opacity:1; }
+.sheet-zoom-inner { width:min(94vw, 150vh); position:relative; cursor:zoom-out; }
+.sheet-zoom-inner .sheet { width:100%; transform:none !important; box-shadow:0 0 0 var(--px) var(--panel-2), 0 24px 70px rgba(0,0,0,.7); }
+.sheet-zoom-close { position:fixed; top:clamp(10px,2.2vh,22px); right:clamp(10px,1.6vw,24px); z-index:2;
+  font-family:var(--font-label); font-size:clamp(1.2rem,2.2vh,1.9rem); background:var(--p-z); color:#fff;
+  border:0; padding:0.18em 0.7em; cursor:pointer;
+  box-shadow:inset -3px -3px 0 rgba(0,0,0,.35), inset 3px 3px 0 rgba(255,255,255,.25); }
+.sheet-zoom-close:focus-visible { outline:3px solid var(--p-o); outline-offset:3px; }
+.sheet-zoom-hint { position:fixed; left:50%; transform:translateX(-50%); bottom:clamp(8px,2vh,20px);
+  font-family:var(--font-label); font-size:clamp(0.95rem,1.9vh,1.4rem); color:#9FAAC6; letter-spacing:.04em; pointer-events:none; }
+@media (prefers-reduced-motion:reduce) { .sheet-zoom { transition:none; } }
+
 #cursorFx { position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999; }
 </style>
 </head>
@@ -470,7 +536,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 <!-- ================= PERIOD 1 · 08:30 to 09:05 ================= -->
 
 <!-- 1 · Title -->
-<section class="slide g-arcade" data-notes="<strong>Threshold, 08:30.</strong> Stand at the door of IG04 as they arrive from IF05. Greet every student by name if you can, uniform and appearance glance before anyone comes in (Expectations s35), fixes go out before entry, not after. <strong>Presenter keys:</strong> N notes &middot; E edit (autosaves on this machine) &middot; F fullscreen &middot; &#8984;&#8679;H hides teacher callouts &middot; arrow keys move, and a slide with a task shows its timer top left. <strong>The red iSAMS pop-up arrives on slide 2 and follows every slide until you press &#10003; done.</strong>">
+<section class="slide g-arcade" data-notes="<strong>Threshold, 08:30.</strong> Stand at the door of IG04 as they arrive from IF05. Greet every student by name if you can, uniform and appearance glance before anyone comes in (Expectations s35), fixes go out before entry, not after. <strong>Presenter keys:</strong> N notes &middot; S sheet full screen &middot; E edit (autosaves on this machine) &middot; F fullscreen &middot; &#8984;&#8679;H hides teacher callouts &middot; arrow keys move, and a slide with a task shows its timer top left. <strong>The red iSAMS pop-up arrives on slide 2 and follows every slide until you press &#10003; done.</strong>">
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall I" style="left:8%;  animation-duration:38s; animation-delay:-4s"></div>
     <div class="tetfall T" style="left:24%; animation-duration:52s; animation-delay:-22s"></div>
@@ -488,11 +554,11 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 
 <!-- 2 · Entry routine: line order + seating plan · iSAMS ARRIVES HERE -->
 <section class="slide g-stack" data-isams="true" data-notes="<strong>Entry routine, 08:30 to 08:36 (6 min).</strong> This is the routine for every lesson, so teach it properly once. Read the line order aloud, then walk them from IF05 to IG04 and let them find their own seat from the plan on screen. Bags away, sit to the plan, name on the sheet. <strong>The red iSAMS pop-up lands here, at 08:30, and follows every slide until you press &#10003; done. One register for this double, final by 08:35, so it is up before its own deadline.</strong> Open iSAMS with the link inside the pop-up. <strong>Physical timetables are handed out this period</strong> (school instruction for Period 1 teachers on day 1), and the housekeeping slide next carries the reminder. <span class='tag cfu'>CFU</span> fist to five on each of the four steps. <strong>Uniform and appearance glance happens at the door, before entry, never after.</strong>">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal" style="margin-bottom:0.15em">// entry_routine</p>
     <h2 class="reveal" style="margin-bottom:calc(var(--element-gap) * 0.7)">Getting in: four moves, every lesson</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:640px">
+      <div>
         <ul class="steps" style="gap:calc(var(--element-gap) * 0.16)">
           <li class="reveal" style="padding-top:0.18em; padding-bottom:0.18em"><b>Line up at IF05.</b> That is the room printed on your timetable, and it is where you wait.</li>
           <li class="reveal" style="padding-top:0.18em; padding-bottom:0.18em"><b>Mr Igor collects you there</b> and walks the class over to IG04.</li>
@@ -537,7 +603,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 
 <!-- 4 · The sheet, walked box by box -->
 <section class="slide g-paper" data-notes="<strong>Sheet walkthrough, still inside the entry window, 08:30 to 08:36.</strong> Handing the sheet out is part of settling in, so this slide sits in the entry block with the two before it, about 2 minutes of it. Hand the printed sheets out NOW, one each, names on straight away. Walk it box by box on screen: header, Learning Intention, Success Criteria, Skills and Roles, Do Now, Hint, Challenge, Super Challenge, Exit Ticket, Self-Barometer. Teach the ring code out loud, because every later slide uses it. The sheet is handed in at the end and kept as their record. <span class='tag cfu'>CFU</span> cold call two students: where does your personal goal go? where do the Exit Ticket answers go?">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// your_control_panel</p>
     <h2 class="reveal">This sheet is the spine of every lesson</h2>
     <div class="sheet-fig big reveal sheet-slot" data-rings=""></div>
@@ -559,11 +625,11 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
     <div class="tetfall O" style="left:6%; animation-duration:46s; animation-delay:-9s"></div>
     <div class="tetfall Z" style="left:93%; animation-duration:54s; animation-delay:-26s"></div>
   </div>
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// do_now &middot; my_top_three</p>
     <h2 class="reveal">Do Now: My Top Three</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:680px">
+      <div>
         <div class="tblock o reveal"><b>Your own Top 3 first, alone, in silence. Then your table agrees one Top 3.</b><br>Category: the technology you would not want to live without.</div>
         <ul class="steps" style="margin-top:var(--element-gap)">
           <li class="reveal">My number one, and one reason why.</li>
@@ -574,7 +640,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
         <div class="tblock i reveal" style="margin-top:var(--element-gap)"><b>Stuck for a sentence?</b> Try: "I would not want to live without ... because ..."</div>
         <div class="tblock s" data-fragment="1" style="margin-top:var(--element-gap)"><b>HINT (stuck on the Do Now?)</b><br>Think about your last 24 hours. What did you switch on, pick up or open first?</div>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b5:gold,b6:gold" style="max-width:min(44vw,600px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b5:gold,b6:gold"></div>
     </div>
   </div>
 </section>
@@ -596,11 +662,11 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall S" style="left:12%; animation-duration:50s; animation-delay:-14s"></div>
   </div>
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// do_now &middot; table_agreement</p>
     <h2 class="reveal">Now your table agrees one Top 3</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:680px">
+      <div>
         <ul class="steps">
           <li class="reveal">Everyone says their number one out loud, and the reason for it.</li>
           <li class="reveal">Everyone shares once before anyone shares twice.</li>
@@ -610,34 +676,34 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
         <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip red">4 minutes &middot; at your table</span></p>
         <div class="tblock z" data-fragment="1" style="margin-top:var(--element-gap)"><b>Cold Call.</b> Two tables report their agreed Top 3, and say whose idea each one was. No hands up, I pick.</div>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b5:gold" style="max-width:min(44vw,600px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b5:gold"></div>
     </div>
   </div>
 </section>
 
 <!-- 8 · Challenge -->
 <section class="slide g-well" data-notes="<strong>Challenge, the early-finishers move inside the Do Now block 08:36 to 08:46.</strong> This slide gets no time slot of its own: it is where anyone who is already done goes, while the rest of the block runs. Word for word off the sheet, Box 7. This is the SIP CONNECT verb: it is harder than writing three more items, which is the point. <strong>Above Level:</strong> they go straight here after the solo phase rather than waiting. Do not let anyone sit idle between the Do Now and the Learning Intention.">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// challenge</p>
     <h2 class="reveal">Finished the Do Now? Take the Challenge</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:680px">
+      <div>
         <div class="tblock o reveal" style="font-size:calc(clamp(0.95rem,1.9vw,1.4rem) * var(--font-scale))"><b>CHALLENGE (finished the Do Now?)</b><br>Connect your three. Write one sentence that is true for all three of your choices.</div>
         <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">CHALLENGE box, gold ring</span></p>
         <div class="tblock i reveal" style="margin-top:var(--element-gap)">One sentence, not three. The harder it is to find something true of all three, the better your answer will be.</div>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b7:gold" style="max-width:min(44vw,600px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b7:gold"></div>
     </div>
   </div>
 </section>
 
 <!-- 9 · Learning Intention -->
 <section class="slide g-panel" data-notes="<strong>Learning Intention, 08:46 to 08:49 (3 min).</strong> Read it aloud, then have two students read it back. The verbs are the doing words and they come from the Years 9 to 10 band: explain is AC9TDI10K02, use is AC9TDI10P11 and P12. Point at the red ring: this is Box 2 on their sheet, word for word. The definition of artificial intelligence lives on this slide only, not on their sheet, so say it out loud and let them hear it twice. It is the first time the class meets the term in this subject. <strong>Misconception to expect:</strong> AI thinks like a person. It predicts patterns from training data. Name it, park it, teach it properly next block.">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// learning_intention</p>
     <h2 class="reveal">What we are learning today</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:700px">
+      <div>
         <div class="tblock z reveal" style="font-size:calc(clamp(0.95rem,1.9vw,1.4rem) * var(--font-scale))">
           We are learning to <span class="verb">explain</span> what you already think artificial intelligence is, and to <span class="verb">use</span> the routines this class runs on.
         </div>
@@ -649,32 +715,32 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
           <br><span class="small">Said here, on the board. It is not printed on your sheet, so listen for it.</span>
         </div>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b2:red" style="max-width:min(44vw,600px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b2:red"></div>
     </div>
   </div>
 </section>
 
 <!-- 10 · Success Criteria -->
 <section class="slide g-panel" data-notes="<strong>Success Criteria, 08:49 to 08:52 (3 min).</strong> Students read these back, not you. Word for word the same on the sheet, the slides and the lesson plan, one source only. Verbs from the Years 9 to 10 band: use, explain, evaluate, critique. The Going further line is on the board only, not on their sheet, so read it out. Criterion 4 is theirs and they write it in Lap 2, so flag it now and move on. <span class='tag cfu'>CFU</span> cold call three students: which criterion will be hardest for you today, and why?">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// success_criteria</p>
     <h2 class="reveal">How you will know you got there</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:700px">
+      <div>
         <div class="tblock s reveal"><b>1 &middot;</b> I can <span class="verb">use</span> the entry routine on my own.</div>
         <div class="tblock s reveal" style="margin-top:var(--element-gap)"><b>2 &middot;</b> I can <span class="verb">explain</span> one place artificial intelligence already turns up in my life.</div>
         <div class="tblock s reveal" style="margin-top:var(--element-gap)"><b>3 &middot;</b> I can <span class="verb">evaluate</span> my own work against Success Criteria 1 and 2, and tick honestly.</div>
         <div class="tblock o reveal" style="margin-top:var(--element-gap)"><b>4 &middot;</b> Personal goal: you write your own, later this lesson.</div>
         <p class="small reveal" style="margin-top:var(--element-gap)"><b>Going further</b> (on the board, not on your sheet): I can <span class="verb">critique</span> one use of artificial intelligence that I think is not justified.</p>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3:green" style="max-width:min(44vw,600px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3:green"></div>
     </div>
   </div>
 </section>
 
 <!-- 11 · Mr Igor, profile -->
 <section class="slide g-stack" data-notes="<strong>All about Mr Igor, 08:52 to 09:05 (13 min across this slide and the next three). This slide, 08:52 to 08:56.</strong> Everything on these slides comes from your own deck and nothing has been added. Keep it moving and let them ask. The Cold Call check lands on the fourth of these slides, so hold the questions until then. <strong>Principal Address s9 check:</strong> do not talk more than the students. If this block runs long, the Soccer Drones tease later is the part that can wait.">
-  <div class="slide-content" style="max-width:min(96vw,1400px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// player_profile</p>
     <div class="two-col img-left">
       <div class="col-img reveal"><img class="portrait" src="assets/igor-headshot.png" alt="Mr Igor"></div>
@@ -694,7 +760,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 
 <!-- 12 · Things I like -->
 <section class="slide g-well" data-notes="<strong>Things I like, 08:56 to 08:59 (3 min).</strong> Your own collage slide, so tell the stories behind whichever photo they point at. Nothing here is invented: watches, basketball, Australian Football League, table tennis, chess, and food. Good moment to let a student ask a question, because the whole first half of this lesson is about the class starting from belonging.">
-  <div class="slide-content" style="max-width:min(96vw,1400px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// things_i_like</p>
     <h2 class="reveal">Things I like</h2>
     <div class="wide-img reveal"><img src="assets/igor-likes.jpg" alt="A collage of Mr Igor's interests: wristwatches, basketball, Australian Football League, chess, table tennis and food"></div>
@@ -704,7 +770,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 
 <!-- 13 · Places -->
 <section class="slide g-well" data-notes="<strong>Holiday photos, 08:59 to 09:02 (3 min).</strong> Mostar is the birthplace, the rest is holiday travel from your own deck: Dubrovnik and its city wall, Naples, Kotor. The Game of Thrones line is on the slide because they will ask anyway. Keep this quick, the Cold Call check is next.">
-  <div class="slide-content" style="max-width:min(96vw,1400px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// where_i_have_been</p>
     <h2 class="reveal">Where I have been</h2>
     <div class="photo-grid reveal">
@@ -863,11 +929,11 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 
 <!-- 21 · Super Challenge -->
 <section class="slide g-well" data-notes="<strong>Super Challenge, a 30 second flash that closes Lap 1 at 09:19.</strong> Show it, name it, move on. Nobody starts it now. Word for word off the sheet, Box 8. Only once everything else is finished, and say that out loud, because otherwise the fast finishers skip the Turn and Talk to get to it. This is the critique verb from the Years 9 to 10 band, and it is the SC extension line made real.">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// super_challenge</p>
     <h2 class="reveal">Super Challenge</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:680px">
+      <div>
         <div class="tblock o reveal"><b>Only once everything else is finished.</b></div>
         <div class="tblock o reveal" style="margin-top:var(--element-gap); font-size:calc(clamp(0.92rem,1.8vw,1.32rem) * var(--font-scale))">
           On your own device, research one real use of AI. Then <span class="verb">critique</span> it: the use, what could go wrong, what a person still has to do.
@@ -875,7 +941,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
         <div class="tblock i reveal" style="margin-top:var(--element-gap)">Hand in, or post it in Classroom.</div>
         <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">SUPER CHALLENGE box, gold ring</span></p>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b8:gold" style="max-width:min(44vw,600px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b8:gold"></div>
     </div>
   </div>
 </section>
@@ -897,27 +963,27 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 
 <!-- 23 · Lap 2: what a tick means -->
 <section class="slide g-paper" data-notes="<strong>Lap 2, 09:21 to 09:27 (6 min over this slide and the next).</strong> The sheet is taught as an instrument, not as paperwork. The tick definition is the whole point of this slide: a tick is a claim that you can do it now. Walk the Self-Barometer at the bottom too, so the reflection later is not the first time they see it. <span class='tag cfu'>CFU</span> cold call two students: what does a tick on Success Criterion 2 mean you have done?">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// what_a_tick_means</p>
     <h2 class="reveal">A tick means you can do it now</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:620px">
+      <div>
         <div class="tblock s reveal"><b>A tick means you can do it now.</b> Not that you had a go at it.</div>
         <div class="tblock o reveal" style="margin-top:var(--element-gap)"><b>The Self-Barometer</b> at the bottom runs 1 Not Confident to 5 Mastered. You place yourself, and it is not a mark.</div>
         <div class="tblock i reveal" style="margin-top:var(--element-gap)"><b>Where the sheet lives.</b> Handed in at the end of every lesson, and kept as your record of the term.</div>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3:green,b10:gold" style="max-width:min(46vw,640px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3:green,b10:gold"></div>
     </div>
   </div>
 </section>
 
 <!-- 24 · Personal goal -->
 <section class="slide g-well" data-timer="120" data-notes="<strong>Personal goal, 09:25 to 09:27, the last 2 min of Lap 2. Timer on the slide.</strong> Success Criteria 4 belongs to them. Read the three examples, then everyone writes their own on the gold-ringed line. Copying one of the examples word for word is allowed, say so. Circulate and read every goal while they write. <strong>Above Level:</strong> your goal names a habit, not a task. <strong>Below Level:</strong> the three examples on screen are enough. <span class='tag cfu'>CFU</span> the Show Call of two goals is the very next slide, so read every goal while you circulate and pick the two you will put up, one vague and one sharp.">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// choose_your_goal</p>
     <h2 class="reveal">Success Criteria 4: your personal goal</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:680px">
+      <div>
         <div class="tblock o reveal"><b>Write one line on your sheet.</b> It has to be something you can check by the end of a lesson.</div>
         <ul class="steps" style="margin-top:var(--element-gap)">
           <li class="reveal">I will answer one cold call out loud without saying pass.</li>
@@ -926,7 +992,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
         </ul>
         <div class="tblock i reveal" style="margin-top:var(--element-gap)">Take one of those word for word, or write your own. Both are fine.</div>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3r4:gold" style="max-width:min(44vw,600px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3r4:gold"></div>
     </div>
   </div>
 </section>
@@ -949,11 +1015,11 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 
 <!-- 26 · Turn and Talk, its own structured slide -->
 <section class="slide g-stack" data-timer="300" data-notes="<strong>Lap 3, 09:29 to 09:38 (9 min across this slide, the roadmap and the drones). Part 1, Turn and Talk, 09:29 to 09:34, 5 min. Timer on the slide.</strong> Structure copied straight from OTP s6, so an observer can name it. Read all five lines of the structure before anyone speaks. Say 'Swap' out loud at the halfway point, about 2 minutes 30. <span class='tag tt'>Turn and Talk</span> <span class='tag cfu'>CFU</span> The Cold Call comes three slides later, after the roadmap and the drones. It asks for the PARTNER'S answer, so tell them that now, before they start listening. <strong>Below Level:</strong> both questions stay on screen the whole time, and the sentence starter is there. <strong>Above Level:</strong> take Question 2 first, then justify.">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// turn_and_talk</p>
     <h2 class="reveal">Turn and Talk: 5 minutes</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:700px">
+      <div>
         <div class="tblock i reveal"><b>Question 1.</b> Where have you already seen artificial intelligence working, outside school?</div>
         <div class="tblock i reveal" style="margin-top:var(--element-gap)"><b>Question 2.</b> Name one thing you would trust AI to do, and one thing you would not.</div>
         <ul class="steps" style="margin-top:var(--element-gap)">
@@ -965,7 +1031,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
         </ul>
         <div class="tblock s reveal" style="margin-top:var(--element-gap)"><b>Stuck for a sentence?</b> Try: "I have seen AI when ..."</div>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3r2:green" style="max-width:min(40vw,540px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3r2:green"></div>
     </div>
   </div>
 </section>
@@ -976,7 +1042,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
     <div class="tetfall I" style="left:5%;  animation-duration:44s; animation-delay:-7s"></div>
     <div class="tetfall T" style="left:95%; animation-duration:50s; animation-delay:-24s"></div>
   </div>
-  <div class="slide-content" style="max-width:min(96vw,1400px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// next_two_weeks</p>
     <h2 class="reveal">The next two weeks: AI, and a game of Tetris</h2>
     <ul class="steps">
@@ -996,7 +1062,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall J" style="left:88%; animation-duration:46s; animation-delay:-12s"></div>
   </div>
-  <div class="slide-content" style="max-width:min(96vw,1400px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// and_after_that</p>
     <h2 class="reveal">And after that: Soccer Drones, in four steps</h2>
     <ul class="steps">
@@ -1027,11 +1093,11 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 
 <!-- 30 · Reflection -->
 <section class="slide g-paper" data-timer="60" data-notes="<strong>Reflection block, 09:40 to 09:43 (3 min across this slide and the Exit Ticket). This slide, 09:40 to 09:41, one minute on the timer: ticks and barometer only.</strong> Sheets out, everyone. Green ring is the Success Criteria block, gold ring is the Self-Barometer. A tick means you can do it now, say it one more time. <strong>Show Call one sheet and celebrate an honest 2</strong>, out loud, by name if they are happy with it. Honesty is the entire point of the barometer, and if the first lesson rewards a dishonest 5 you will never get a true one again.">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// reflection</p>
     <h2 class="reveal">Tick honestly</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:560px">
+      <div>
         <ul class="steps">
           <li class="reveal"><b>Tick Success Criteria 1 to 3.</b> A tick means you can do it now.</li>
           <li class="reveal"><b>Tick your personal goal</b> if you actually proved it today.</li>
@@ -1039,18 +1105,18 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
         </ul>
         <div class="tblock s reveal" style="margin-top:var(--element-gap)">Nobody is checking these against each other. You are grading how sure you are, not how good you are.</div>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3:green,b10:gold" style="max-width:min(46vw,640px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b3:green,b10:gold"></div>
     </div>
   </div>
 </section>
 
 <!-- 31 · Exit Ticket -->
 <section class="slide g-paper" data-timer="120" data-notes="<strong>Exit Ticket, 09:41 to 09:43, the last 2 min of the reflection block. Timer on the slide.</strong> Both questions word for word off the sheet, Box 9. The Classroom Care line under Q2 is the cue to reset the room, so read it before they stand rather than after. The sheet button on this slide pulls the page up for anyone who has lost theirs. The join code stays visible for anyone who did not get into Classroom earlier. <span class='tag cfu'>CFU</span> read two answers aloud as you collect, no names.">
-  <div class="slide-content" style="max-width:min(96vw,1420px)">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// exit_ticket</p>
     <h2 class="reveal">Exit Ticket</h2>
     <div class="two-col" style="align-items:start">
-      <div style="max-width:620px">
+      <div>
         <div class="tblock z reveal" style="font-size:calc(clamp(0.92rem,1.8vw,1.32rem) * var(--font-scale))"><b>Q1 &middot;</b> Write one thing you now know about how this class runs.</div>
         <div class="tblock z reveal" style="margin-top:var(--element-gap); font-size:calc(clamp(0.92rem,1.8vw,1.32rem) * var(--font-scale))"><b>Q2 &middot;</b> Write one thing you already think about artificial intelligence.</div>
         <div class="tblock o reveal" style="margin-top:var(--element-gap)"><b>Before you stand:</b> desks to the 2 desk format, chairs in.</div>
@@ -1059,7 +1125,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
           &nbsp;<a class="linkbtn" href="https://classroom.google.com" target="_blank" rel="noopener">&#9654; open Google Classroom</a>
           &nbsp;<a class="linkbtn gold" href="https://docs.google.com/presentation/d/1iKpZh4ic0FaJeelzM3WseTOu_Asy3eTqem2y7xORRUc/edit" target="_blank" rel="noopener" style="font-size:calc(clamp(0.68rem,1.05vw,0.88rem) * var(--font-scale)); padding:0.22em 0.6em">&#9654; open the LI SC sheet</a></p>
       </div>
-      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b9:red" style="max-width:min(44vw,600px)"></div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b9:red"></div>
     </div>
   </div>
 </section>
@@ -1120,7 +1186,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
   </div>
   <div class="notes-body" id="notesBody">(no notes for this slide)</div>
 </aside>
-<div class="notes-hint" id="notesHint">N = notes &middot; E = edit &middot; &#8984;S = save copy</div>
+<div class="notes-hint" id="notesHint">N notes &middot; S sheet &middot; E edit &middot; &#8984;S save copy</div>
 
 <!-- controls pill -->
 <div class="font-scale-ctrl" id="fontScaleCtrl">
@@ -1135,12 +1201,19 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
   <button id="editBtn" class="fs-btn edit-btn" aria-label="Edit mode" title="Edit text (E), then &#8984;S to save a copy">&#9999;&#65039;</button>
 </div>
 
+<!-- the student sheet, full screen. Filled from the current slide's own sheet, rings and all. -->
+<div class="sheet-zoom" id="sheetZoom" role="dialog" aria-modal="true" aria-label="Student sheet, full screen">
+  <div class="sheet-zoom-inner" id="sheetZoomInner"></div>
+  <button class="sheet-zoom-close" id="sheetZoomClose" type="button" aria-label="Close the sheet">&#10005; close</button>
+  <p class="sheet-zoom-hint">Esc, click anywhere, or press S to close</p>
+</div>
+
 <script>
 /* STORAGE POLICY: inline text edits persist in THIS browser, keyed to DECK_VERSION.
    Any deck push bumps DECK_VERSION (push-update.sh does it automatically), which purges
    stored edits so a stale edit can never be restored over a restructured deck.
    Everything else (font scale, teacher toggle, iSAMS state, timers) stays session-only. */
-const DECK_VERSION = 'v20260901-153931';
+const DECK_VERSION = 'v20260901-164339';
 const EDIT_KEY = 'g10w1-edits:' + DECK_VERSION;
 try { Object.keys(localStorage).forEach(k => { if (k !== EDIT_KEY) localStorage.removeItem(k); }); } catch (e) {}
 
@@ -1155,6 +1228,15 @@ function buildSheets() {
   document.querySelectorAll('.sheet-slot').forEach(slot => {
     slot.appendChild(tpl.content.cloneNode(true));
     const sheet = slot.querySelector('.sheet');
+    /* Every point of use gets a labelled button. It is a real <button> inside the
+       slide, not an invisible hot zone, and it is not in the inline editor's
+       selector, so it can never put the projector into edit mode. */
+    const open = document.createElement('button');
+    open.type = 'button';
+    open.className = 'sheet-open';
+    open.innerHTML = '\uD83D\uDD0D Open sheet';
+    open.setAttribute('aria-label', 'Open the student sheet full screen');
+    slot.appendChild(open);
     const spec = (slot.dataset.rings || '').split(',').map(s => s.trim()).filter(Boolean);
     if (!spec.length) return;
     sheet.classList.add('has-ring');
@@ -1192,26 +1274,33 @@ function buildWash(holes) {
 }
 
 /* How far a slide's content pokes out past its own box, top and bottom.
-   Measured off real boxes so a centred flex column reports honestly. */
+   Measured in LAYOUT space (offsetTop / offsetHeight), not with
+   getBoundingClientRect. That matters: every .reveal sits at translateY(26px)
+   until its slide has been on screen, and a fit that runs before then (boot,
+   fonts.ready, a resize while another slide is up) read those 26px as real
+   overflow and shrank the slide to absorb height that does not exist. Offsets
+   ignore transforms, so a slide measures the same whether it has been shown or
+   not, and the fit stops punishing slides for their own entrance animation. */
 function slideOverflow(content) {
   const cs = getComputedStyle(content);
-  const rect = content.getBoundingClientRect();
-  const top = rect.top + parseFloat(cs.paddingTop);
-  const bottom = rect.bottom - parseFloat(cs.paddingBottom);
+  const top = parseFloat(cs.paddingTop);
+  const bottom = content.clientHeight - parseFloat(cs.paddingBottom);
   let minY = Infinity, maxY = -Infinity;
   Array.from(content.children).forEach(ch => {
     if (getComputedStyle(ch).position === 'absolute') return;
-    const r = ch.getBoundingClientRect();
-    if (!r.height) return;
-    minY = Math.min(minY, r.top); maxY = Math.max(maxY, r.bottom);
+    if (!ch.offsetHeight) return;
+    minY = Math.min(minY, ch.offsetTop); maxY = Math.max(maxY, ch.offsetTop + ch.offsetHeight);
   });
   if (minY === Infinity) return 0;
   return Math.max(0, top - minY) + Math.max(0, maxY - bottom);
 }
 
-/* Keeps every sheet as big as its slide allows and never clipped: shrink it
-   by exactly what the slide overruns, then check again in case one pass
-   was not enough. Re-runs on resize and whenever the font scale changes. */
+/* A last-resort guard only. The thumbnail is bounded by CSS (width AND window
+   height), so on any sane window it never overruns and this never fires. The old
+   0.35 floor is what turned the sheet into a postage stamp: compounded with the
+   content-box scale below it took the sheet to about a fifth of nominal size, and
+   at font scale 1.1 it measured 151px wide for a 3000px page. The floor is 0.8
+   now, and anything that does fire is reported to the console rather than hidden. */
 function fitSheets() {
   const figs = Array.from(document.querySelectorAll('.sheet-fig'));
   figs.forEach(fig => {
@@ -1232,7 +1321,7 @@ function fitSheets() {
       const rendered = sheet.getBoundingClientRect().height;
       if (rendered < 60) return;
       const current = parseFloat(sheet.dataset.fitScale || '1');
-      const next = Math.max(0.35, current * Math.max(0.4, (rendered - over - 8) / rendered));
+      const next = Math.max(0.8, current * Math.max(0.85, (rendered - over - 8) / rendered));
       if (Math.abs(next - current) < 0.005) return;
       sheet.dataset.fitScale = next;
       sheet.style.transform = 'scale(' + next + ')';
@@ -1243,11 +1332,18 @@ function fitSheets() {
   }
 }
 
-/* Last line of defence for short projectors. Anything a slide still overruns
-   after the sheets are fitted gets absorbed here: grow the content box until
-   nothing is clipped, then scale the whole box back down to the slide. The
-   slide itself keeps clipping, so a slide can never scroll. */
+/* Last line of defence, and deliberately a very shallow one now. The base type
+   above was measured so that all 32 slides fit at Igor's two window shapes with
+   nothing left over to absorb, so on those screens this does not fire at all.
+   The floor is 0.94, not the old 0.55: shrinking the words to make a slide fit is
+   the thing that made these slides hard to read, and 0.55 compounded with the
+   sheet's own 0.35 floor is what produced a sheet at a fifth of nominal size.
+   Worst case now is 94 percent of a base that is already 20 to 100 percent larger
+   than before, so a scaled slide is still bigger than it used to be. Anything that
+   does fire is named in the console, never swallowed. */
+const FIT_FLOOR = 0.94;
 function fitSlides() {
+  const squeezed = [];
   document.querySelectorAll('.slide-content').forEach(c => {
     c.style.transform = ''; c.style.height = ''; c.style.maxHeight = ''; c.style.flex = '';
     const over = slideOverflow(c);
@@ -1255,7 +1351,7 @@ function fitSlides() {
     const h = c.clientHeight;
     if (!h) return;
     const grown = h + over + 20;
-    let scale = Math.max(0.55, h / grown);
+    let scale = Math.max(FIT_FLOOR, h / grown);
     c.style.flex = 'none';
     c.style.height = grown + 'px';
     c.style.maxHeight = 'none';
@@ -1276,13 +1372,21 @@ function fitSlides() {
       if (minY === Infinity) break;
       const spill = Math.max(0, sr.top - minY) + Math.max(0, maxY - sr.bottom);
       if (spill < 3) break;
-      scale = Math.max(0.5, scale * (1 - (spill + 8) / h));
+      scale = Math.max(FIT_FLOOR, scale * (1 - (spill + 8) / h));
       c.style.transform = 'scale(' + scale + ')';
     }
+    const slideIdx = Array.from(document.querySelectorAll('.slide')).indexOf(c.closest('.slide')) + 1;
+    squeezed.push(slideIdx + ' (' + Math.round(scale * 100) + '%)');
   });
+  if (squeezed.length) console.warn('deck fit: these slides did not fit at the base type size and were scaled: ' + squeezed.join(', '));
 }
 
 function fitAll() { fitSheets(); fitSlides(); }
+
+/* True while the sheet lightbox is open. Every input path that moves the deck
+   checks this first, so a presenter clicker, an arrow key, a scroll wheel or a
+   swipe cannot change slides behind the open sheet. */
+function sheetZoomOpen() { return document.body.classList.contains('sheet-zoom-open'); }
 
 /* ===========================================
    SLIDE PRESENTATION CONTROLLER
@@ -1383,6 +1487,9 @@ class SlidePresentation {
     };
     document.addEventListener('keydown', (e) => {
       if (e.target.isContentEditable || ['INPUT','TEXTAREA','IFRAME'].includes(e.target.tagName)) return;
+      /* The sheet is open over the top: the clicker's next/prev belongs to the
+         lightbox, which closes on it. Nothing moves underneath. */
+      if (sheetZoomOpen()) return;
       if (NEXT.includes(e.key)) {
         e.preventDefault();
         if (e.repeat) return;
@@ -1399,15 +1506,16 @@ class SlidePresentation {
   bindWheelTouch() {
     let wheelLock = false;
     window.addEventListener('wheel', (e) => {
+      if (sheetZoomOpen()) return;
       if (wheelLock) return;
       wheelLock = true;
       setTimeout(() => wheelLock = false, 450);
       if (e.deltaY > 12) this.next(); else if (e.deltaY < -12) this.prev();
     }, { passive: true });
     let touchY = null;
-    window.addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchstart', (e) => { touchY = sheetZoomOpen() ? null : e.touches[0].clientY; }, { passive: true });
     window.addEventListener('touchend', (e) => {
-      if (touchY === null) return;
+      if (touchY === null || sheetZoomOpen()) { touchY = null; return; }
       const dy = touchY - e.changedTouches[0].clientY;
       if (Math.abs(dy) > 50) { dy > 0 ? this.next() : this.prev(); }
       touchY = null;
@@ -1737,7 +1845,7 @@ class CursorEffects {
     });
     window.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
-      if (e.target.closest('button, a, [contenteditable], input, textarea, .nav-dots')) return;
+      if (e.target.closest('button, a, [contenteditable], input, textarea, .nav-dots, .sheet, .sheet-zoom')) return;
       this.current = { points: [{ x: e.clientX, y: e.clientY }], done: false };
       this.strokes.push(this.current);
     });
@@ -1781,6 +1889,77 @@ class CursorEffects {
 }
 
 /* ===========================================
+   STUDENT SHEET LIGHTBOX
+   Opens the sheet from the current slide full screen, rings and all, so the
+   class can actually see the box Mr Igor is pointing at. Three ways in: the
+   "Open sheet" button, the thumbnail itself, or the S key. Four ways out: Esc,
+   the close button, a click anywhere, or any deck navigation key (which the
+   deck itself ignores while this is open, so a clicker closes the sheet with
+   one press and moves on with the next).
+   =========================================== */
+class SheetLightbox {
+  constructor(presentation) {
+    this.presentation = presentation;
+    this.wrap  = document.getElementById('sheetZoom');
+    this.inner = document.getElementById('sheetZoomInner');
+    this.opener = null;
+    if (!this.wrap) return;
+    document.getElementById('sheetZoomClose').addEventListener('click', () => this.close());
+    this.wrap.addEventListener('click', () => this.close());
+    document.querySelectorAll('.sheet-open').forEach(btn => {
+      btn.addEventListener('click', (e) => { e.stopPropagation(); this.open(btn.closest('.sheet-fig')); });
+    });
+    document.querySelectorAll('.sheet-fig .sheet').forEach(sheet => {
+      sheet.addEventListener('click', () => {
+        if (document.body.classList.contains('edit-active')) return;
+        this.open(sheet.closest('.sheet-fig'));
+      });
+    });
+    const NAVKEYS = ['ArrowRight','ArrowLeft','ArrowUp','ArrowDown','PageUp','PageDown',' ','Home','End'];
+    document.addEventListener('keydown', (e) => {
+      if (e.target.isContentEditable || ['INPUT','TEXTAREA','IFRAME'].includes(e.target.tagName)) return;
+      if (this.isOpen()) {
+        if (e.key === 'Escape' || NAVKEYS.includes(e.key) || e.key === 's' || e.key === 'S') {
+          e.preventDefault(); this.close();
+        }
+        return;
+      }
+      if ((e.key === 's' || e.key === 'S') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault(); this.openCurrent();
+      }
+    });
+  }
+  isOpen() { return document.body.classList.contains('sheet-zoom-open'); }
+  /* S opens whatever sheet the slide on screen is already showing. */
+  openCurrent() {
+    const slide = this.presentation.slides[this.presentation.current];
+    this.open(slide && slide.querySelector('.sheet-fig'));
+  }
+  open(fig) {
+    const sheet = fig && fig.querySelector('.sheet');
+    if (!sheet) return;
+    const clone = sheet.cloneNode(true);
+    /* fitSheets may have left a scale on the thumbnail; the full-screen copy is
+       sized by its own box, so any inherited transform or height comes off. */
+    clone.style.transform = 'none';
+    clone.style.height = '';
+    this.inner.innerHTML = '';
+    this.inner.appendChild(clone);
+    this.opener = fig.querySelector('.sheet-open') || null;
+    document.body.classList.add('sheet-zoom-open');
+    this.wrap.classList.add('open');
+    document.getElementById('sheetZoomClose').focus();
+  }
+  close() {
+    if (!this.isOpen()) return;
+    this.wrap.classList.remove('open');
+    document.body.classList.remove('sheet-zoom-open');
+    this.inner.innerHTML = '';
+    if (this.opener) { this.opener.focus(); this.opener = null; }
+  }
+}
+
+/* ===========================================
    INLINE EDITOR with AUTOSAVE.
    Edits save to localStorage as you type and reload with the page, on this
    machine, keyed to DECK_VERSION (a deck push purges them, see STORAGE POLICY).
@@ -1808,7 +1987,7 @@ class InlineEditor {
     this.toggleBtn.addEventListener('click', () => this.toggleEditMode());
     this.pillBtn.addEventListener('click', () => this.toggleEditMode());
     document.addEventListener('keydown', (e) => {
-      if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable') && !e.metaKey && !e.ctrlKey) this.toggleEditMode();
+      if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable') && !e.metaKey && !e.ctrlKey && !sheetZoomOpen()) this.toggleEditMode();
       if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); this.exportFile(); }
     });
   }
@@ -1890,6 +2069,7 @@ new FontScaleController();
 new FullscreenController();
 new TeacherToggle();
 new CursorEffects();
+new SheetLightbox(presentation);
 new InlineEditor(presentation);
 
 /* Sheets are measured once the pixel fonts have actually landed, because they
