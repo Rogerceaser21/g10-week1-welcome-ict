@@ -98,6 +98,11 @@ html { scroll-snap-type:y mandatory; scroll-behavior:smooth; }
   max-height:100%; overflow:hidden; padding:var(--slide-padding);
   /* top gutter keeps the timer pill and the iSAMS pop-up off the slide's own words */
   padding-top:max(var(--slide-padding), clamp(64px, 9.5vh, 100px));
+  /* bottom gutter does the same job for the navigation bar, the control pill and
+     the slide number. Content is centred in what is left, so a slide with room
+     to spare simply sits a little higher; nothing is scaled to pay for it, and
+     the sweep at 1512x982 and 3440x1440 confirms no slide is. */
+  padding-bottom:max(var(--slide-padding), clamp(62px, 7.6vh, 96px));
   max-width:min(94vw, 2100px); margin:0 auto; width:100%; position:relative; z-index:3;
 }
 .card, .container, .content-box { max-width:min(90vw, 1000px); max-height:min(80vh, 700px); }
@@ -303,9 +308,13 @@ ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
 
 /* poster, shown as big as the slide allows */
 /* the poster clears the top chrome the same way a slide-content does */
-.poster-wrap { flex:1; display:flex; align-items:center; justify-content:center;
+.poster-wrap { flex:1; min-height:0; display:flex; align-items:center; justify-content:center;
   padding:clamp(0.4rem,1.6vw,1.2rem); padding-top:clamp(64px, 9.5vh, 100px); position:relative; z-index:3; }
-.poster-wrap img { max-height:72vh; max-width:92vw; object-fit:contain; background:#fff;
+/* The poster slide carries no .slide-content, so this row is the one bit of
+   slide copy that sits on the floor of the window. It keeps clear of the
+   navigation bar itself; every other slide's content already does. */
+.poster-foot { padding:0 1rem clamp(66px,7.4vh,88px); }
+.poster-wrap img { max-height:min(72vh, 100%); max-width:92vw; object-fit:contain; background:#fff;
   box-shadow:0 0 0 var(--px) var(--panel-2), 12px 12px 0 rgba(0,0,0,.35); }
 
 /* ===========================================
@@ -329,7 +338,12 @@ ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
 .sheet-fig { position:relative; align-self:center; margin-inline:auto; width:100%;
   max-width:min(26vw, 36vh, 520px);
   display:flex; flex-direction:column; align-items:center; gap:clamp(6px, 0.9vh, 12px); }
-.sheet-fig.big { max-width:min(62vw, 94vh, 1500px); }
+/* 88vh, not 94vh: the bottom gutter that keeps the navigation bar off the words
+   costs the tall sheet slides a band of height, and this is what pays for it.
+   The point is that the fit engine still never fires on these slides, which is
+   the invariant the readability pass set; the thumbnail is 6 percent smaller
+   and the full-size read is one click away in the lightbox, as designed. */
+.sheet-fig.big { max-width:min(62vw, 88vh, 1500px); }
 /* every ring zone is a percentage rectangle measured off the exported page,
    so a ring always lands on the real box, at any projector size */
 .sh-zone { position:absolute; left:var(--l); top:var(--t); width:var(--w); height:var(--h);
@@ -515,6 +529,108 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
   font-family:var(--font-label); font-size:clamp(0.95rem,1.9vh,1.4rem); color:#9FAAC6; letter-spacing:.04em; pointer-events:none; }
 @media (prefers-reduced-motion:reduce) { .sheet-zoom { transition:none; } }
 
+/* ===========================================
+   ON-SCREEN NAVIGATION BAR
+   The no-clicker path, and it is part of every deck now. BACK and NEXT call
+   the same two methods the arrow keys call, so on a slide with fragments they
+   step the reveals first and only then change slide. They dim at the two ends
+   of the deck rather than going quiet, and neither of them can arm edit mode:
+   that is still the pencil or the E key, nothing else.
+   The bar lives inside the bottom gutter the slides already leave for the
+   control pill and the slide number, so it costs the slides no room and no
+   type had to be shrunk to make space for it.
+   =========================================== */
+.deck-nav { position:fixed; left:50%; transform:translateX(-50%); bottom:clamp(8px,1.5vh,16px);
+  z-index:9450; display:flex; align-items:stretch; gap:clamp(5px,0.6vw,10px); }
+.dn-btn { font-family:var(--font-label); font-size:clamp(20px,2.9vh,36px); line-height:1;
+  min-height:48px; min-width:56px; display:inline-flex; align-items:center; justify-content:center; gap:0.35em;
+  padding:0 clamp(0.45em,0.9vw,0.85em); border:0; cursor:pointer; letter-spacing:.05em;
+  background:var(--panel); color:#EEF2FF;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.45),
+             inset var(--px) var(--px) 0 rgba(255,255,255,.14), 0 6px 22px rgba(0,0,0,.45);
+  transition:filter .15s ease, opacity .15s ease; }
+.dn-btn:hover:not(:disabled) { filter:brightness(1.4); }
+.dn-btn:focus-visible { outline:3px solid var(--p-o); outline-offset:3px; }
+.dn-btn:disabled { opacity:.26; cursor:default; }
+.dn-arrow { font-size:0.92em; }
+.dn-pick { background:var(--p-t); color:#fff; }
+/* Anything opened over the deck owns the screen, so the bar steps out of the way. */
+body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
+
+/* ===========================================
+   COLD CALL NAME PICKER
+   The class roster drawn at random with the cold call discipline built in:
+   no repeats until everyone has been called and then it reshuffles, a visible
+   three second Wait Time after every name because the answer is not taken
+   before that, a come back to queue for anyone who passes (No Opt Out, and
+   the teacher can see who is owed a return), partner mode for "what did your
+   partner say", and a Build Ratio prompt so the next answer adds to the last
+   one instead of starting again. Absent students are switched off before the
+   lesson and never come out of the draw.
+   Opens over the slide from the bottom bar and closes the way the sheet does:
+   the close button, Esc, or a click on the backdrop. Session only, like every
+   other deck control except the inline edits.
+   =========================================== */
+.picker { position:fixed; inset:0; z-index:10040; display:none; align-items:center; justify-content:center;
+  background:rgba(5,7,14,.93); padding:clamp(8px,1.6vh,22px); opacity:0;
+  transition:opacity .2s var(--ease-out-expo); }
+.picker.open { display:flex; opacity:1; }
+.picker-card { width:min(2200px,94vw); max-height:96vh; display:flex; flex-direction:column; cursor:default;
+  background:var(--panel); box-shadow:0 0 0 var(--px) var(--panel-2), 0 26px 80px rgba(0,0,0,.75); }
+.pk-head { display:flex; align-items:center; gap:clamp(8px,1.1vw,18px); flex-wrap:wrap;
+  padding:clamp(6px,1.1vh,14px) clamp(10px,1.2vw,20px); background:var(--panel-2); }
+.pk-title { font-family:var(--font-display); font-size:clamp(0.58rem,1.45vh,1.05rem); color:var(--p-o); letter-spacing:.04em; }
+.pk-hands { font-family:var(--font-label); font-size:clamp(1rem,2.4vh,1.85rem); letter-spacing:.07em;
+  background:var(--p-z); color:#fff; padding:0.06em 0.6em; }
+.picker.open .pk-hands { animation:handsFlash 1.6s ease-in-out 3; }
+@keyframes handsFlash { 0%,100% { background:var(--p-z); color:#fff; } 50% { background:var(--p-o); color:var(--ink); } }
+.pk-close { margin-left:auto; font-family:var(--font-label); font-size:clamp(1rem,2.1vh,1.6rem);
+  background:var(--p-z); color:#fff; border:0; padding:0.14em 0.7em; cursor:pointer; min-height:40px;
+  box-shadow:inset -3px -3px 0 rgba(0,0,0,.35), inset 3px 3px 0 rgba(255,255,255,.25); }
+.pk-close:focus-visible { outline:3px solid var(--p-o); outline-offset:3px; }
+.pk-body { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+  gap:clamp(8px,1.1vw,20px); padding:clamp(8px,1.4vh,18px) clamp(10px,1.2vw,20px);
+  overflow:hidden; min-height:0; }
+.pk-stage { display:flex; flex-direction:column; justify-content:center; gap:clamp(4px,0.9vh,12px); min-width:0; }
+.pk-kicker { font-family:var(--font-label); font-size:clamp(1rem,2.2vh,1.7rem); color:var(--p-i); letter-spacing:.05em; }
+.pk-name { font-family:var(--font-label); font-size:clamp(2.2rem,8.4vh,6.4rem); line-height:1.04; color:#fff;
+  text-shadow:0 5px 0 var(--edge); letter-spacing:.02em; overflow-wrap:break-word; }
+.pk-name.idle { color:#6C779A; text-shadow:none; }
+.pk-where { font-family:var(--font-label); font-size:clamp(1rem,2.3vh,1.8rem); color:var(--mist); letter-spacing:.04em; }
+.pk-line { font-family:var(--font-label); font-size:clamp(1rem,2.2vh,1.7rem); letter-spacing:.03em;
+  padding:0.16em 0.6em; line-height:1.25; }
+.pk-line.partner { background:var(--p-j); color:#fff; }
+.pk-line.ratio { background:var(--p-s); color:var(--ink); }
+.pk-line.empty, .pk-wait.blank { display:none; }
+.pk-wait { font-family:var(--font-label); font-size:clamp(1.3rem,3.4vh,2.8rem); letter-spacing:.08em;
+  padding:0.08em 0.7em; align-self:flex-start; }
+.pk-wait.counting { background:var(--p-l); color:var(--ink); }
+.pk-wait.ready { background:var(--p-s); color:var(--ink); }
+.pk-actions { display:flex; flex-wrap:wrap; align-items:stretch; gap:clamp(6px,0.8vw,14px); margin-top:clamp(2px,0.6vh,8px); }
+.pk-draw { font-family:var(--font-display); font-size:clamp(0.7rem,1.8vh,1.3rem); letter-spacing:.03em;
+  background:var(--p-o); color:var(--ink); border:0; padding:0.8em 1.25em; cursor:pointer; min-height:56px;
+  box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.32), inset var(--px) var(--px) 0 rgba(255,255,255,.45); }
+.pk-draw:hover { filter:brightness(1.08); }
+.pk-draw:focus-visible, .pk-btn:focus-visible, .pk-chip:focus-visible { outline:3px solid var(--p-i); outline-offset:3px; }
+.pk-btn { font-family:var(--font-label); font-size:clamp(1rem,2.1vh,1.6rem); letter-spacing:.04em;
+  background:var(--panel-2); color:#EEF2FF; border:0; padding:0.3em 0.8em; cursor:pointer; min-height:44px;
+  box-shadow:inset -3px -3px 0 rgba(0,0,0,.4), inset 3px 3px 0 rgba(255,255,255,.1); }
+.pk-btn:hover:not(:disabled) { filter:brightness(1.35); }
+.pk-btn:disabled { opacity:.3; cursor:default; }
+.pk-btn.on { background:var(--p-t); color:#fff; }
+.pk-side { display:flex; flex-direction:column; gap:clamp(5px,0.9vh,12px); min-width:0; overflow-y:auto; }
+.pk-h { font-family:var(--font-display); font-size:clamp(0.5rem,1.2vh,0.82rem); color:var(--p-o); letter-spacing:.05em; }
+.pk-chips { display:flex; flex-wrap:wrap; gap:5px; }
+.pk-chip { font-family:var(--font-label); font-size:clamp(0.92rem,1.9vh,1.4rem); letter-spacing:.03em;
+  background:var(--panel-2); color:#EEF2FF; border:0; padding:0.2em 0.6em; cursor:pointer; min-height:38px; }
+.pk-chip:hover { filter:brightness(1.3); }
+.pk-chip.away { opacity:.4; text-decoration:line-through; }
+.pk-chip.called { box-shadow:inset 0 -5px 0 var(--p-i); }
+.pk-chip.owed { background:var(--p-z); color:#fff; }
+.pk-note { font-family:var(--font-label); font-size:clamp(0.9rem,1.8vh,1.32rem); color:#9FAAC6; letter-spacing:.03em; line-height:1.3; }
+@media (max-width:1000px) { .pk-body { grid-template-columns:1fr; overflow-y:auto; } }
+@media (prefers-reduced-motion:reduce) { .picker { transition:none; } .picker.open .pk-hands { animation:none; } }
+
 #cursorFx { position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999; }
 </style>
 </head>
@@ -553,7 +669,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 2 · Entry routine: line order + seating plan · iSAMS ARRIVES HERE -->
-<section class="slide g-stack" data-isams="true" data-notes="<strong>Entry routine, 08:30 to 08:36 (6 min).</strong> This is the routine for every lesson, so teach it properly once. Read the line order aloud, then walk them from IF05 to IG04 and let them find their own seat from the plan on screen. Bags away, sit to the plan, name on the sheet. <strong>The red iSAMS pop-up lands here, at 08:30, and follows every slide until you press &#10003; done. One register for this double, final by 08:35, so it is up before its own deadline.</strong> Open iSAMS with the link inside the pop-up. <strong>Physical timetables are handed out this period</strong> (school instruction for Period 1 teachers on day 1), and the housekeeping slide next carries the reminder. <span class='tag cfu'>CFU</span> fist to five on each of the four steps. <strong>Uniform and appearance glance happens at the door, before entry, never after.</strong>">
+<section class="slide g-stack" data-isams="true" data-notes="<strong>Entry routine, 08:30 to 08:36 (6 min).</strong> This is the routine for every lesson, so teach it properly once. Read the line order aloud, then walk them from IF05 to IG04 and let them find their own seat from the plan on screen. Bags away, sit to the plan, name on the sheet. <strong>The red iSAMS pop-up lands here, at 08:30, and follows every slide until you press &#10003; done. One register for this double, final by 08:35, so it is up before its own deadline.</strong> Open iSAMS with the link inside the pop-up. <strong>Physical timetables are handed out this period</strong> (school instruction for Period 1 teachers on day 1), and the housekeeping slide next carries the reminder. <span class='tag cfu'>CFU</span> ask for 0 to 5 fingers on each of the four steps. <strong>Uniform and appearance glance happens at the door, before entry, never after.</strong>">
   <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal" style="margin-bottom:0.15em">// entry_routine</p>
     <h2 class="reveal" style="margin-bottom:calc(var(--element-gap) * 0.7)">Getting in: four moves, every lesson</h2>
@@ -586,7 +702,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 3 · The lesson loop + housekeeping -->
-<section class="slide g-panel" data-notes="<strong>Housekeeping and the loop, still inside the entry window, 08:30 to 08:36.</strong> This slide is part of settling in, not a block of its own: the class is finding seats and getting sheets while you run it. Fast, about 1 minute. This is the shape of every lesson in student words, and it carries the timetable handout. <strong>The red iSAMS pop-up is already up from the slide before and stays on every slide until you press &#10003; done. One register for this double, final by 08:35.</strong> Open iSAMS with the link inside the pop-up. <span class='tag cfu'>CFU</span> Cold Call one student to say the four steps back to me. Then fist to five: how confident is everyone else that they know them?">
+<section class="slide g-panel" data-notes="<strong>Housekeeping and the loop, still inside the entry window, 08:30 to 08:36.</strong> This slide is part of settling in, not a block of its own: the class is finding seats and getting sheets while you run it. Fast, about 1 minute. This is the shape of every lesson in student words, and it carries the timetable handout. <strong>The red iSAMS pop-up is already up from the slide before and stays on every slide until you press &#10003; done. One register for this double, final by 08:35.</strong> Open iSAMS with the link inside the pop-up. <span class='tag cfu'>CFU</span> Cold Call one student to say the four steps back to me. Then ask for 0 to 5 fingers: how confident is everyone else that they know them?">
   <div class="slide-content">
     <p class="eyebrow reveal">// how_every_lesson_runs</p>
     <h2 class="reveal">The same loop, every lesson</h2>
@@ -609,7 +725,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
     <div class="sheet-fig big reveal sheet-slot" data-rings=""></div>
     <div class="reveal" style="margin-top:var(--element-gap); display:flex; flex-wrap:wrap; gap:0.6em 1.4em; align-items:center">
       <span class="chip">name on it &middot; handed in at the end &middot; kept as your record</span>
-      <a class="linkbtn gold" href="https://docs.google.com/presentation/d/1iKpZh4ic0FaJeelzM3WseTOu_Asy3eTqem2y7xORRUc/edit" target="_blank" rel="noopener">&#9654; open the LI SC sheet</a>
+      <a class="linkbtn gold" href="https://docs.google.com/presentation/d/1iKpZh4ic0FaJeelzM3WseTOu_Asy3eTqem2y7xORRUc/edit" target="_blank" rel="noopener">&#9654; open the Learning Intention and Success Criteria sheet</a>
       <div class="ring-key">
         <span class="k-red"><i></i> red ring = Learning Intention and Exit Ticket</span>
         <span class="k-green"><i></i> green ring = Success Criteria</span>
@@ -650,7 +766,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
   <div class="poster-wrap">
     <img src="assets/poster-12.jpg" alt="Poster 12: My Top Three, a cooperative learning activity built on PIES">
   </div>
-  <div style="position:relative; z-index:3; padding:0 1rem clamp(0.5rem,2vh,1.2rem); display:flex; flex-direction:column; align-items:center; gap:clamp(0.25rem,0.8vh,0.5rem)">
+  <div class="poster-foot" style="position:relative; z-index:3; display:flex; flex-direction:column; align-items:center; gap:clamp(0.25rem,0.8vh,0.5rem)">
     <span class="chip">Poster 12 lives on our wall. Every group game in this room works the PIES way.</span>
     <span class="chip dark" style="text-align:center">PIES: Positive interdependence, Individual accountability, Equal participation, Simultaneous interaction.</span>
     <span class="chip green" style="text-align:center">Our room runs it in threes and fours, because our tables seat two.</span>
@@ -873,7 +989,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 18 · Bathroom + nurse -->
-<section class="slide g-panel" data-notes="<strong>Bathroom and nurse, about 2 min. Expectations s33 and s34.</strong> Reveal one at a time. These are school-wide rules, not Mr Igor being difficult, and saying so lands better. <span class='tag cfu'>CFU</span> fist to five on both routines at the end. Anything under 3 gets re-taught on the spot, not later. <strong>Nurse:</strong> a nurse slip sends them straight to the secondary clinic. <strong>Say what the All Access Pass is</strong> as you name it, because today is the first time they hear the phrase.">
+<section class="slide g-panel" data-notes="<strong>Bathroom and nurse, about 2 min. Expectations s33 and s34.</strong> Reveal one at a time. These are school-wide rules, not Mr Igor being difficult, and saying so lands better. <span class='tag cfu'>CFU</span> ask for 0 to 5 fingers on both routines at the end. Anything under 3 gets re-taught on the spot, not later. <strong>Nurse:</strong> a nurse slip sends them straight to the secondary clinic. <strong>Say what the All Access Pass is</strong> as you name it, because today is the first time they hear the phrase.">
   <div class="slide-content">
     <p class="eyebrow reveal">// bathroom_and_nurse</p>
     <h2 class="reveal">Bathroom and nurse</h2>
@@ -962,7 +1078,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 </section>
 
 <!-- 23 · Lap 2: what a tick means -->
-<section class="slide g-paper" data-notes="<strong>Lap 2, 09:21 to 09:27 (6 min over this slide and the next).</strong> The sheet is taught as an instrument, not as paperwork. The tick definition is the whole point of this slide: a tick is a claim that you can do it now. Walk the Self-Barometer at the bottom too, so the reflection later is not the first time they see it. <span class='tag cfu'>CFU</span> cold call two students: what does a tick on Success Criterion 2 mean you have done?">
+<section class="slide g-paper" data-notes="<strong>Lap 2, 09:21 to 09:27 (6 min over this slide and the next).</strong> The sheet is taught as an instrument, not as paperwork. The tick definition is the whole point of this slide: a tick is a claim that you can do it now. Walk the Self-Barometer at the bottom too, so the reflection later is not the first time they see it. <span class='tag cfu'>CFU</span> cold call two students: what does a tick on Success Criteria 2 mean you have done?">
   <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// what_a_tick_means</p>
     <h2 class="reveal">A tick means you can do it now</h2>
@@ -1123,7 +1239,7 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
         <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip">both answers go on the back of your sheet</span>
           &nbsp;<span class="chip">not in Classroom yet? code: yvyk3hu2</span>
           &nbsp;<a class="linkbtn" href="https://classroom.google.com" target="_blank" rel="noopener">&#9654; open Google Classroom</a>
-          &nbsp;<a class="linkbtn gold" href="https://docs.google.com/presentation/d/1iKpZh4ic0FaJeelzM3WseTOu_Asy3eTqem2y7xORRUc/edit" target="_blank" rel="noopener" style="font-size:calc(clamp(0.68rem,1.05vw,0.88rem) * var(--font-scale)); padding:0.22em 0.6em">&#9654; open the LI SC sheet</a></p>
+          &nbsp;<a class="linkbtn gold" href="https://docs.google.com/presentation/d/1iKpZh4ic0FaJeelzM3WseTOu_Asy3eTqem2y7xORRUc/edit" target="_blank" rel="noopener" style="font-size:calc(clamp(0.68rem,1.05vw,0.88rem) * var(--font-scale)); padding:0.22em 0.6em">&#9654; open the Learning Intention and Success Criteria sheet</a></p>
       </div>
       <div class="col-img reveal sheet-fig sheet-slot" data-rings="b9:red"></div>
     </div>
@@ -1208,12 +1324,59 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
   <p class="sheet-zoom-hint">Esc, click anywhere, or press S to close</p>
 </div>
 
+<!-- On-screen navigation, so a lesson with no clicker in the room still moves.
+     BACK and NEXT are the arrow keys with a finger on them, fragments and all. -->
+<nav class="deck-nav" id="deckNav" aria-label="Deck navigation">
+  <button class="dn-btn" id="navPrev" type="button" aria-label="Back: previous reveal, or previous slide"><span class="dn-arrow" aria-hidden="true">&#9664;</span> BACK</button>
+  <button class="dn-btn dn-pick" id="navPicker" type="button" aria-label="Open the cold call name picker">COLD CALL</button>
+  <button class="dn-btn" id="navNext" type="button" aria-label="Next: next reveal, or next slide">NEXT <span class="dn-arrow" aria-hidden="true">&#9654;</span></button>
+</nav>
+
+<!-- The cold call name picker: the class roster, drawn properly. -->
+<div class="picker" id="picker" role="dialog" aria-modal="true" aria-label="Cold call name picker">
+  <div class="picker-card" id="pickerCard">
+    <div class="pk-head">
+      <span class="pk-title">COLD CALL &middot; 101ICTB</span>
+      <span class="pk-hands">HANDS STAY DOWN</span>
+      <button class="pk-close" id="pkClose" type="button" aria-label="Close the picker">&#10005; close</button>
+    </div>
+    <div class="pk-body">
+      <div class="pk-stage">
+        <p class="pk-kicker" id="pkRound">round 1</p>
+        <p class="pk-name idle" id="pkName">press DRAW</p>
+        <p class="pk-where" id="pkWhere">nobody drawn yet</p>
+        <p class="pk-line partner empty" id="pkPartner"></p>
+        <p class="pk-line ratio empty" id="pkRatio"></p>
+        <div class="pk-wait blank" id="pkWait" role="status" aria-live="polite"></div>
+        <div class="pk-actions">
+          <button class="pk-draw" id="pkDraw" type="button">DRAW NEXT NAME</button>
+          <button class="pk-btn" id="pkPass" type="button" disabled>PASS, come back to them</button>
+          <button class="pk-btn" id="pkReturn" type="button" disabled>RETURN TO</button>
+        </div>
+      </div>
+      <div class="pk-side pk-scroll">
+        <p class="pk-h">// how this draw runs</p>
+        <div class="pk-chips">
+          <button class="pk-btn" id="pkPartnerMode" type="button">partner mode: off</button>
+          <button class="pk-btn" id="pkRatioMode" type="button">build ratio: off</button>
+          <button class="pk-btn" id="pkReset" type="button">reshuffle the round</button>
+        </div>
+        <p class="pk-h">// come back to &middot; No Opt Out</p>
+        <div class="pk-chips" id="pkQueue"></div>
+        <p class="pk-h">// here today &middot; tap a name to mark it away</p>
+        <div class="pk-chips" id="pkRoster"></div>
+        <p class="pk-note" id="pkNote"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* STORAGE POLICY: inline text edits persist in THIS browser, keyed to DECK_VERSION.
    Any deck push bumps DECK_VERSION (push-update.sh does it automatically), which purges
    stored edits so a stale edit can never be restored over a restructured deck.
    Everything else (font scale, teacher toggle, iSAMS state, timers) stays session-only. */
-const DECK_VERSION = 'v20260901-164339';
+const DECK_VERSION = 'v20260901-175436';
 const EDIT_KEY = 'g10w1-edits:' + DECK_VERSION;
 try { Object.keys(localStorage).forEach(k => { if (k !== EDIT_KEY) localStorage.removeItem(k); }); } catch (e) {}
 
@@ -1388,6 +1551,13 @@ function fitAll() { fitSheets(); fitSlides(); }
    swipe cannot change slides behind the open sheet. */
 function sheetZoomOpen() { return document.body.classList.contains('sheet-zoom-open'); }
 
+/* True while the cold call picker is open, and true while EITHER overlay is.
+   Every input path that moves the deck asks navBlocked() first, so a clicker,
+   an arrow key, a scroll wheel or a swipe cannot walk the class off the slide
+   underneath an open sheet or an open picker. */
+function pickerOpen() { return document.body.classList.contains('picker-open'); }
+function navBlocked() { return sheetZoomOpen() || pickerOpen(); }
+
 /* ===========================================
    SLIDE PRESENTATION CONTROLLER
    =========================================== */
@@ -1487,9 +1657,10 @@ class SlidePresentation {
     };
     document.addEventListener('keydown', (e) => {
       if (e.target.isContentEditable || ['INPUT','TEXTAREA','IFRAME'].includes(e.target.tagName)) return;
-      /* The sheet is open over the top: the clicker's next/prev belongs to the
-         lightbox, which closes on it. Nothing moves underneath. */
-      if (sheetZoomOpen()) return;
+      /* An overlay is open over the top: the clicker's next/prev belongs to it.
+         The sheet closes on it, the picker draws the next name. Nothing moves
+         underneath either of them. */
+      if (navBlocked()) return;
       if (NEXT.includes(e.key)) {
         e.preventDefault();
         if (e.repeat) return;
@@ -1506,16 +1677,16 @@ class SlidePresentation {
   bindWheelTouch() {
     let wheelLock = false;
     window.addEventListener('wheel', (e) => {
-      if (sheetZoomOpen()) return;
+      if (navBlocked()) return;
       if (wheelLock) return;
       wheelLock = true;
       setTimeout(() => wheelLock = false, 450);
       if (e.deltaY > 12) this.next(); else if (e.deltaY < -12) this.prev();
     }, { passive: true });
     let touchY = null;
-    window.addEventListener('touchstart', (e) => { touchY = sheetZoomOpen() ? null : e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchstart', (e) => { touchY = navBlocked() ? null : e.touches[0].clientY; }, { passive: true });
     window.addEventListener('touchend', (e) => {
-      if (touchY === null || sheetZoomOpen()) { touchY = null; return; }
+      if (touchY === null || navBlocked()) { touchY = null; return; }
       const dy = touchY - e.changedTouches[0].clientY;
       if (Math.abs(dy) > 50) { dy > 0 ? this.next() : this.prev(); }
       touchY = null;
@@ -1845,7 +2016,7 @@ class CursorEffects {
     });
     window.addEventListener('mousedown', (e) => {
       if (e.button !== 0) return;
-      if (e.target.closest('button, a, [contenteditable], input, textarea, .nav-dots, .sheet, .sheet-zoom')) return;
+      if (e.target.closest('button, a, [contenteditable], input, textarea, .nav-dots, .sheet, .sheet-zoom, .picker, .deck-nav')) return;
       this.current = { points: [{ x: e.clientX, y: e.clientY }], done: false };
       this.strokes.push(this.current);
     });
@@ -1924,7 +2095,7 @@ class SheetLightbox {
         }
         return;
       }
-      if ((e.key === 's' || e.key === 'S') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      if ((e.key === 's' || e.key === 'S') && !e.metaKey && !e.ctrlKey && !e.altKey && !pickerOpen()) {
         e.preventDefault(); this.openCurrent();
       }
     });
@@ -1960,6 +2131,311 @@ class SheetLightbox {
 }
 
 /* ===========================================
+   ON-SCREEN NAVIGATION BAR
+   BACK and NEXT call presentation.prev() and presentation.next(), the exact
+   two methods the arrow keys call, so a slide with fragments steps its reveals
+   first and only then changes slide. Both refresh their own dimmed state after
+   every move, including a fragment reveal, which does not change slide and so
+   never reaches update(). Neither button can arm edit mode: that is still the
+   pencil in the control pill or the E key, nothing else.
+   =========================================== */
+class DeckNav {
+  constructor(presentation, picker) {
+    this.p = presentation;
+    this.prevBtn = document.getElementById('navPrev');
+    this.nextBtn = document.getElementById('navNext');
+    this.pickBtn = document.getElementById('navPicker');
+    if (!this.prevBtn || !this.nextBtn) return;
+    /* A pointer click leaves focus on the button, and a focused button eats the
+       next space bar the clicker sends. Keyboard activation (detail 0) keeps it. */
+    const tap = (btn, fn) => btn && btn.addEventListener('click', (e) => {
+      if (e.detail > 0) btn.blur();
+      fn();
+    });
+    tap(this.prevBtn, () => this.p.prev());
+    tap(this.nextBtn, () => this.p.next());
+    tap(this.pickBtn, () => { if (picker) picker.open(); });
+    const wrap = (name) => {
+      const orig = this.p[name].bind(this.p);
+      this.p[name] = (...args) => { orig(...args); this.refresh(); };
+    };
+    wrap('next'); wrap('prev'); wrap('update');
+    this.refresh();
+  }
+  refresh() {
+    const slide = this.p.slides[this.p.current];
+    if (!slide) return;
+    const frags = Array.from(slide.querySelectorAll('[data-fragment]'));
+    const anyHidden = frags.some(f => !f.classList.contains('fragment-visible'));
+    const anyShown  = frags.some(f => f.classList.contains('fragment-visible'));
+    this.prevBtn.disabled = (this.p.current === 0 && !anyShown);
+    this.nextBtn.disabled = (this.p.current === this.p.total - 1 && !anyHidden);
+  }
+}
+
+/* ===========================================
+   COLD CALL NAME PICKER
+   The roster is 101ICTB off the school's own class list, and the table numbers
+   are the seating plan for IG04. Full names are on screen by Igor's ruling for
+   this deck. Nothing here is generated: no name is invented and none is left out.
+   The discipline the picker carries, straight off the TLAC set and OTP slide 6:
+     no repeats until everyone has been called, then it reshuffles;
+     absent students are switched off before the lesson and never drawn;
+     three seconds of visible Wait Time after a name lands, because the answer
+       is not taken before that;
+     a come back to queue, so a pass is a return and not an escape (No Opt Out),
+       and the teacher can see who is still owed;
+     partner mode, so after a Turn and Talk the question is what did your
+       partner say;
+     a Build Ratio prompt, so the next student adds to the last answer;
+     hands stay down, said out loud every time it opens.
+   =========================================== */
+const ROSTER = [
+  { first:'Abdulla', full:'Abdulla Alsuwaidi', table:1 },
+  { first:'Ahmed',   full:'Ahmed Al Ali',      table:1 },
+  { first:'Hamdan',  full:'Hamdan Alrajaby',   table:2 },
+  { first:'Hamed',   full:'Hamed Amiri',       table:2 },
+  { first:'Hessa',   full:'Hessa Almaazmi',    table:3 },
+  { first:'Mansoor', full:'Mansoor Bisho',     table:3 },
+  { first:'Reem',    full:'Reem Alansaari',    table:3 },
+  { first:'Vana',    full:'Vana Kalijian',     table:5 },
+  { first:'Yara',    full:'Yara Noureddin',    table:5 },
+  { first:'Yousef',  full:'Yousef Ali',        table:6 },
+  { first:'Zayed',   full:'Zayed Alansaari',   table:6 }
+];
+const WAIT_SECONDS = 3;
+
+class ColdCallPicker {
+  constructor() {
+    this.wrap = document.getElementById('picker');
+    if (!this.wrap) return;
+    const id = (x) => document.getElementById(x);
+    this.el = {
+      round:  id('pkRound'),  name: id('pkName'),   where: id('pkWhere'),
+      partner:id('pkPartner'),ratio:id('pkRatio'),  wait:  id('pkWait'),
+      draw:   id('pkDraw'),   pass: id('pkPass'),   ret:   id('pkReturn'),
+      queue:  id('pkQueue'),  roster:id('pkRoster'),note:  id('pkNote'),
+      pMode:  id('pkPartnerMode'), rMode: id('pkRatioMode'), reset: id('pkReset'),
+      close:  id('pkClose')
+    };
+    /* A copy saved with Cmd+S while the picker was open must not reopen with it. */
+    document.body.classList.remove('picker-open');
+    this.wrap.classList.remove('open');
+    this.absent = new Set();
+    this.queue = [];
+    this.current = null;
+    this.previous = null;
+    this.partnerMode = false;
+    this.ratioMode = false;
+    this.waitTimer = null;
+    this.waitLeft = 0;
+    this.round = 0;
+    this.note = '';
+    this.newRound();
+    this.buildRoster();
+    this.bind();
+    this.render();
+  }
+  /* ---- state ---- */
+  present() { return ROSTER.map((s, i) => i).filter(i => !this.absent.has(i)); }
+  tableMates(i) { return ROSTER.map((s, k) => k).filter(k => k !== i && ROSTER[k].table === ROSTER[i].table); }
+  newRound() {
+    this.round += 1;
+    this.called = new Set();
+    this.pool = this.present();
+  }
+  draw() {
+    if (!this.present().length) {
+      this.note = 'Everybody is marked away. Tap a name to bring them back into the draw.';
+      this.render(); return;
+    }
+    let fresh = false;
+    if (!this.pool.length) { this.newRound(); fresh = true; }
+    const k = Math.floor(Math.random() * this.pool.length);
+    const picked = this.pool.splice(k, 1)[0];
+    this.commit(picked);
+    this.note = fresh ? 'Everybody had been called, so the round reshuffled. This is round ' + this.round + '.' : '';
+    this.render();
+  }
+  /* One student, named, whatever the reason: a fresh draw or a return. */
+  commit(i) {
+    this.previous = this.current;
+    this.current = i;
+    this.called.add(i);
+    this.pool = this.pool.filter(x => x !== i);
+    this.queue = this.queue.filter(x => x !== i);
+    this.startWait();
+  }
+  pass() {
+    if (this.current === null) return;
+    const owed = this.current;
+    if (!this.queue.includes(owed)) this.queue.push(owed);
+    this.draw();
+    this.note = ROSTER[owed].full + ' still owes you that answer. They are in the come back to queue.';
+    this.render();
+  }
+  returnTo(i) {
+    this.commit(i);
+    this.note = 'Back to ' + ROSTER[i].full + '. No Opt Out: they give the answer now.';
+    this.render();
+  }
+  toggleAbsent(i) {
+    if (this.absent.has(i)) {
+      this.absent.delete(i);
+      if (!this.called.has(i) && !this.pool.includes(i)) this.pool.push(i);
+      this.note = ROSTER[i].full + ' is back in the draw.';
+    } else {
+      this.absent.add(i);
+      this.pool = this.pool.filter(x => x !== i);
+      this.queue = this.queue.filter(x => x !== i);
+      this.note = ROSTER[i].full + ' is away today and will not be drawn.';
+    }
+    this.render();
+  }
+  reset() {
+    this.round = 0;
+    this.newRound();
+    this.current = null; this.previous = null; this.queue = [];
+    this.stopWait();
+    this.note = 'Fresh round. Everybody who is here is back in the draw.';
+    this.render();
+  }
+  /* ---- Wait Time: three seconds, on screen, every single time ---- */
+  startWait() {
+    this.stopWait();
+    this.waitLeft = WAIT_SECONDS;
+    this.paintWait();
+    this.waitTimer = setInterval(() => {
+      this.waitLeft -= 1;
+      if (this.waitLeft <= 0) { this.waitLeft = 0; this.stopWait(); }
+      this.paintWait();
+    }, 1000);
+  }
+  stopWait() { clearInterval(this.waitTimer); this.waitTimer = null; }
+  paintWait() {
+    const el = this.el.wait;
+    if (this.current === null) { el.className = 'pk-wait blank'; el.textContent = ''; return; }
+    if (this.waitLeft > 0) { el.className = 'pk-wait counting'; el.textContent = 'WAIT ' + this.waitLeft; }
+    else { el.className = 'pk-wait ready'; el.textContent = 'ASK NOW'; }
+  }
+  /* ---- painting ---- */
+  buildRoster() {
+    this.el.roster.innerHTML = ''; /* clear, so a saved copy never doubles the class */
+    this.chips = ROSTER.map((s, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'pk-chip';
+      b.addEventListener('click', (e) => { if (e.detail > 0) b.blur(); this.toggleAbsent(i); });
+      this.el.roster.appendChild(b);
+      return b;
+    });
+  }
+  render() {
+    const here = this.present().length;
+    const left = this.pool.filter(i => !this.absent.has(i)).length;
+    this.el.round.textContent = 'round ' + this.round + ' · ' + left + ' of ' + here + ' still to be called';
+    if (this.current === null) {
+      this.el.name.textContent = 'press DRAW';
+      this.el.name.classList.add('idle');
+      this.el.where.textContent = here + ' here today · nobody drawn yet';
+    } else {
+      const s = ROSTER[this.current];
+      this.el.name.textContent = s.full;
+      this.el.name.classList.remove('idle');
+      this.el.where.textContent = 'table ' + s.table + (this.absent.has(this.current) ? ' · marked away' : '');
+    }
+    const mates = this.current === null ? [] : this.tableMates(this.current).filter(i => !this.absent.has(i));
+    if (this.partnerMode && this.current !== null) {
+      this.el.partner.textContent = mates.length
+        ? 'Ask: what did your partner say? ' + (mates.length > 1 ? 'Partners: ' : 'Partner: ') + mates.map(i => ROSTER[i].full).join(' and ')
+        : 'No partner here today. Ask what they said themselves, then draw a second name.';
+      this.el.partner.classList.remove('empty');
+    } else this.el.partner.classList.add('empty');
+    if (this.ratioMode && this.current !== null && this.previous !== null) {
+      this.el.ratio.textContent = 'Build on it: add to what ' + ROSTER[this.previous].full + ' just said, do not start again.';
+      this.el.ratio.classList.remove('empty');
+    } else if (this.ratioMode) {
+      this.el.ratio.textContent = 'Build Ratio is on. From the second name, every answer adds to the one before it.';
+      this.el.ratio.classList.remove('empty');
+    } else this.el.ratio.classList.add('empty');
+    this.el.pass.disabled = (this.current === null);
+    this.el.ret.disabled = !this.queue.length;
+    this.el.ret.textContent = this.queue.length ? 'RETURN TO ' + ROSTER[this.queue[0]].first.toUpperCase() : 'RETURN TO';
+    this.el.pMode.textContent = 'partner mode: ' + (this.partnerMode ? 'on' : 'off');
+    this.el.pMode.classList.toggle('on', this.partnerMode);
+    this.el.rMode.textContent = 'build ratio: ' + (this.ratioMode ? 'on' : 'off');
+    this.el.rMode.classList.toggle('on', this.ratioMode);
+    this.el.queue.innerHTML = '';
+    if (!this.queue.length) {
+      const p = document.createElement('span');
+      p.className = 'pk-note';
+      p.textContent = 'nobody owes you an answer';
+      this.el.queue.appendChild(p);
+    } else this.queue.forEach(i => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'pk-chip owed';
+      b.textContent = 'back to ' + ROSTER[i].full;
+      b.addEventListener('click', (e) => { if (e.detail > 0) b.blur(); this.returnTo(i); });
+      this.el.queue.appendChild(b);
+    });
+    this.chips.forEach((b, i) => {
+      const away = this.absent.has(i);
+      b.textContent = ROSTER[i].full + (away ? ' · away' : '');
+      b.classList.toggle('away', away);
+      b.classList.toggle('called', !away && this.called.has(i));
+      b.setAttribute('aria-label', ROSTER[i].full + (away ? ', away today, tap to bring back' : ', here today, tap to mark away'));
+    });
+    this.el.note.textContent = this.note;
+    this.paintWait();
+  }
+  /* ---- open, close, keys ---- */
+  isOpen() { return document.body.classList.contains('picker-open'); }
+  open() {
+    if (this.isOpen()) return;
+    document.body.classList.add('picker-open');
+    this.wrap.classList.add('open');
+    this.render();
+    this.el.draw.focus();
+  }
+  close() {
+    if (!this.isOpen()) return;
+    this.stopWait();
+    this.wrap.classList.remove('open');
+    document.body.classList.remove('picker-open');
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+  bind() {
+    const tap = (btn, fn) => btn && btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (e.detail > 0) btn.blur();
+      fn();
+    });
+    tap(this.el.draw, () => this.draw());
+    tap(this.el.pass, () => this.pass());
+    tap(this.el.ret,  () => { if (this.queue.length) this.returnTo(this.queue[0]); });
+    tap(this.el.pMode, () => { this.partnerMode = !this.partnerMode; this.render(); });
+    tap(this.el.rMode, () => { this.ratioMode  = !this.ratioMode;  this.render(); });
+    tap(this.el.reset, () => this.reset());
+    tap(this.el.close, () => this.close());
+    /* Closes the way the sheet does: the button, Esc, or a click on the backdrop.
+       A click inside the card is a control, not a way out. */
+    this.wrap.addEventListener('click', (e) => { if (e.target === this.wrap) this.close(); });
+    /* The deck must not scroll behind the open picker. The roster column keeps
+       its own scroll, so the guard steps aside inside it. */
+    const hold = (e) => { if (this.isOpen() && !e.target.closest('.pk-scroll')) e.preventDefault(); };
+    this.wrap.addEventListener('wheel', hold, { passive: false });
+    this.wrap.addEventListener('touchmove', hold, { passive: false });
+    const DRAW_KEYS = ['ArrowRight', 'ArrowDown', 'PageDown', ' '];
+    document.addEventListener('keydown', (e) => {
+      if (!this.isOpen()) return;
+      if (e.target.isContentEditable || ['INPUT','TEXTAREA','IFRAME'].includes(e.target.tagName)) return;
+      if (e.key === 'Escape') { e.preventDefault(); this.close(); return; }
+      /* a clicker in the hand draws the next name, which is the common thing */
+      if (DRAW_KEYS.includes(e.key) && !e.metaKey && !e.ctrlKey) { e.preventDefault(); if (!e.repeat) this.draw(); }
+    });
+  }
+}
+
+/* ===========================================
    INLINE EDITOR with AUTOSAVE.
    Edits save to localStorage as you type and reload with the page, on this
    machine, keyed to DECK_VERSION (a deck push purges them, see STORAGE POLICY).
@@ -1987,7 +2463,7 @@ class InlineEditor {
     this.toggleBtn.addEventListener('click', () => this.toggleEditMode());
     this.pillBtn.addEventListener('click', () => this.toggleEditMode());
     document.addEventListener('keydown', (e) => {
-      if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable') && !e.metaKey && !e.ctrlKey && !sheetZoomOpen()) this.toggleEditMode();
+      if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable') && !e.metaKey && !e.ctrlKey && !navBlocked()) this.toggleEditMode();
       if ((e.metaKey || e.ctrlKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); this.exportFile(); }
     });
   }
@@ -2070,6 +2546,8 @@ new FullscreenController();
 new TeacherToggle();
 new CursorEffects();
 new SheetLightbox(presentation);
+const coldCall = new ColdCallPicker();
+const deckNav = new DeckNav(presentation, coldCall);
 new InlineEditor(presentation);
 
 /* Sheets are measured once the pixel fonts have actually landed, because they
@@ -2097,7 +2575,8 @@ setTimeout(() => {
 
 /* Exposed so a person or a verification script can drive the deck from the
    console: window.deck.presentation.goTo(n), window.deck.DECK_VERSION. */
-window.deck = { presentation: presentation, DECK_VERSION: DECK_VERSION, EDIT_KEY: EDIT_KEY, fit: fitAll };
+window.deck = { presentation: presentation, DECK_VERSION: DECK_VERSION, EDIT_KEY: EDIT_KEY, fit: fitAll,
+                picker: coldCall, nav: deckNav, roster: ROSTER };
 </script>
 </body>
 </html>
