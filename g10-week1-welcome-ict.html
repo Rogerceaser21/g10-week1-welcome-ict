@@ -1369,7 +1369,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
   <div class="picker-card" id="pickerCard">
     <div class="pk-head">
       <span class="pk-title">RANDOM NAME PICKER &middot; 101ICTB</span>
-      <button class="pk-btn pk-cc" id="pkCCMode" type="button" aria-pressed="false">cold call mode: off</button>
+      <button class="pk-btn pk-cc" id="pkCCMode" type="button" aria-pressed="false">questioning kit: off</button>
       <span class="pk-hands cc-only" id="pkHands">HANDS STAY DOWN</span>
       <button class="pk-close" id="pkClose" type="button" aria-label="Close the picker">&#10005; close</button>
     </div>
@@ -2223,8 +2223,9 @@ class DeckNav {
    then the round starts again with the count saying so, and a name marked away
    is never picked.
 
-   COLD CALL MODE is the switch in the header, and it brings the rest of the
-   discipline back, all of it:
+   THE QUESTIONING KIT is the switch in the header, labelled that way in both
+   states so nothing on screen names the technique while the kit is put away.
+   Switch it on and the whole cold call discipline comes back, all of it:
      three seconds of visible Wait Time after a name lands, because the answer
        is not taken before that;
      a come back queue, so a pass is a return and not a way out, and the
@@ -2437,7 +2438,9 @@ class ColdCallPicker {
     const prevName = this.previous !== null ? ROSTER[this.previous].first : 'the last person';
     this.el.rMode.textContent = 'add to what ' + prevName + ' said: ' + (this.ratioMode ? 'on' : 'off');
     this.el.rMode.classList.toggle('on', this.ratioMode);
-    this.el.cc.textContent = 'cold call mode: ' + (this.ccMode ? 'on' : 'off');
+    /* The switch names itself the same way in both states, and never says the
+       technique out loud, so plain mode stays a plain name picker on screen. */
+    this.el.cc.textContent = 'questioning kit: ' + (this.ccMode ? 'on' : 'off');
     this.el.cc.classList.toggle('on', this.ccMode);
     this.el.cc.setAttribute('aria-pressed', this.ccMode ? 'true' : 'false');
     this.el.queue.innerHTML = '';
