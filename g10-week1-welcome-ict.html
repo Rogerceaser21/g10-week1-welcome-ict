@@ -573,15 +573,14 @@ body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outli
 body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
 
 /* ===========================================
-   COLD CALL NAME PICKER
-   The class roster drawn at random with the cold call discipline built in:
-   no repeats until everyone has been called and then it reshuffles, a visible
-   three second Wait Time after every name because the answer is not taken
-   before that, a come back to queue for anyone who passes (No Opt Out, and
-   the teacher can see who is owed a return), partner mode for "what did your
-   partner say", and a Build Ratio prompt so the next answer adds to the last
-   one instead of starting again. Absent students are switched off before the
-   lesson and never come out of the draw.
+   RANDOM NAME PICKER
+   It is a random name picker first, and that is what opens: the count, the
+   name, one big button. No repeats until everybody has been picked and then
+   the round starts again, and a name marked away is never picked.
+   The cold call kit (wait time, pass and the come back queue, partner mode,
+   add to the last answer, hands stay down) lives behind the switch in the
+   header, because Igor teaches most of the lesson without it and a screen
+   full of prompts got in the way.
    Opens over the slide from the bottom bar and closes the way the sheet does:
    the close button, Esc, or a click on the backdrop. Session only, like every
    other deck control except the inline edits.
@@ -608,9 +607,26 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
   overflow:hidden; min-height:0; }
 .pk-stage { display:flex; flex-direction:column; justify-content:center; gap:clamp(4px,0.9vh,12px); min-width:0; }
 .pk-kicker { font-family:var(--font-label); font-size:clamp(1rem,2.2vh,1.7rem); color:var(--p-i); letter-spacing:.05em; }
-.pk-name { font-family:var(--font-label); font-size:clamp(2.2rem,8.4vh,6.4rem); line-height:1.04; color:#fff;
-  text-shadow:0 5px 0 var(--edge); letter-spacing:.02em; overflow-wrap:break-word; }
-.pk-name.idle { color:#6C779A; text-shadow:none; }
+/* The name lands on a card that turns exactly the way the Heads and Tails coin
+   on slide 15 turns: the same 1.6s rotateY in 3D, the same easing, the same
+   pixel bevel and block colour. Bigger type than the name had before, because
+   it has to read from the back row. */
+.pk-flip { width:100%; perspective:1600px; }
+.pk-flip-inner { position:relative; width:100%; height:clamp(148px,30vh,320px);
+  transform-style:preserve-3d; transition:transform 1.6s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.pk-face { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  text-align:center; padding:0.1em 0.4em; backface-visibility:hidden;
+  font-family:var(--font-label); font-size:clamp(2.3rem,8.8vh,6.8rem); line-height:1.02;
+  letter-spacing:.02em; overflow-wrap:break-word; background:var(--p-o); color:var(--ink);
+  box-shadow:inset -8px -8px 0 rgba(0,0,0,.28), inset 8px 8px 0 rgba(255,255,255,.4);
+  clip-path:polygon(0 14px, 14px 14px, 14px 0, calc(100% - 14px) 0, calc(100% - 14px) 14px, 100% 14px,
+    100% calc(100% - 14px), calc(100% - 14px) calc(100% - 14px), calc(100% - 14px) 100%,
+    14px 100%, 14px calc(100% - 14px), 0 calc(100% - 14px)); }
+.pk-face.back { transform:rotateY(180deg); }
+.pk-face.idle { background:var(--panel-2); color:#8C97BA; font-size:clamp(1rem,3vh,2.3rem); letter-spacing:.07em; }
+/* Everything the cold call switch owns is out of the way until it is switched on. */
+.picker:not(.cc) .cc-only { display:none; }
+.pk-cc { font-size:clamp(0.85rem,1.7vh,1.25rem); min-height:38px; padding:0.2em 0.7em; }
 .pk-where { font-family:var(--font-label); font-size:clamp(1rem,2.3vh,1.8rem); color:var(--mist); letter-spacing:.04em; }
 .pk-line { font-family:var(--font-label); font-size:clamp(1rem,2.2vh,1.7rem); letter-spacing:.03em;
   padding:0.16em 0.6em; line-height:1.25; }
@@ -644,7 +660,8 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
 .pk-chip.owed { background:var(--p-z); color:#fff; }
 .pk-note { font-family:var(--font-label); font-size:clamp(0.9rem,1.8vh,1.32rem); color:#9FAAC6; letter-spacing:.03em; line-height:1.3; }
 @media (max-width:1000px) { .pk-body { grid-template-columns:1fr; overflow-y:auto; } }
-@media (prefers-reduced-motion:reduce) { .picker { transition:none; } .picker.open .pk-hands { animation:none; } }
+@media (prefers-reduced-motion:reduce) { .picker { transition:none; } .picker.open .pk-hands { animation:none; }
+  .pk-flip-inner { transition:none; } }
 
 #cursorFx { position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999; }
 </style>
@@ -667,7 +684,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
 <!-- ================= PERIOD 1 · 08:30 to 09:05 ================= -->
 
 <!-- 1 · Title -->
-<section class="slide g-arcade" data-notes="<strong>Threshold, 08:30.</strong> Stand at the door of IG04 as they arrive from IF05. Greet every student by name if you can, uniform and appearance glance before anyone comes in (Expectations s35), fixes go out before entry, not after. <strong>Presenter keys:</strong> N notes &middot; S sheet full screen &middot; C cold call name picker &middot; E edit (autosaves on this machine) &middot; F fullscreen &middot; &#8984;&#8679;H hides teacher callouts &middot; arrow keys move, and a slide with a task shows its timer top left. <strong>No clicker?</strong> The BACK, COLD CALL and NEXT buttons along the bottom do the same job with a finger, and NEXT reveals the next line before it changes slide. Inside the picker, forward draws the next name and back closes it. <strong>The red iSAMS pop-up arrives on slide 2 and follows every slide until you press &#10003; done.</strong>">
+<section class="slide g-arcade" data-notes="<strong>Threshold, 08:30.</strong> Stand at the door of IG04 as they arrive from IF05. Greet every student by name if you can, uniform and appearance glance before anyone comes in (Expectations s35), fixes go out before entry, not after. <strong>Presenter keys:</strong> N notes &middot; S sheet full screen &middot; C random name picker &middot; E edit (autosaves on this machine) &middot; F fullscreen &middot; &#8984;&#8679;H hides teacher callouts &middot; arrow keys move, and a slide with a task shows its timer top left. <strong>No clicker?</strong> The BACK, RANDOM NAME PICKER and NEXT buttons along the bottom do the same job with a finger, and NEXT reveals the next line before it changes slide. Inside the picker, forward picks the next name and back closes it. <strong>The red iSAMS pop-up arrives on slide 2 and follows every slide until you press &#10003; done.</strong>">
   <div class="tetbox" aria-hidden="true">
     <div class="tetfall I" style="left:8%;  animation-duration:38s; animation-delay:-4s"></div>
     <div class="tetfall T" style="left:24%; animation-duration:52s; animation-delay:-22s"></div>
@@ -1317,7 +1334,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
   </div>
   <div class="notes-body" id="notesBody">(no notes for this slide)</div>
 </aside>
-<div class="notes-hint" id="notesHint">N notes &middot; S sheet &middot; E edit &middot; &#8984;S save copy</div>
+<div class="notes-hint" id="notesHint">N notes &middot; S sheet &middot; C random name picker &middot; E edit &middot; &#8984;S save copy</div>
 
 <!-- controls pill -->
 <div class="font-scale-ctrl" id="fontScaleCtrl">
@@ -1343,41 +1360,47 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
      BACK and NEXT are the arrow keys with a finger on them, fragments and all. -->
 <nav class="deck-nav" id="deckNav" aria-label="Deck navigation">
   <button class="dn-btn" id="navPrev" type="button" aria-label="Back: previous reveal, or previous slide"><span class="dn-arrow" aria-hidden="true">&#9664;</span> BACK</button>
-  <button class="dn-btn dn-pick" id="navPicker" type="button" aria-label="Open the cold call name picker">COLD CALL</button>
+  <button class="dn-btn dn-pick" id="navPicker" type="button" aria-label="Open the random name picker">RANDOM NAME PICKER</button>
   <button class="dn-btn" id="navNext" type="button" aria-label="Next: next reveal, or next slide">NEXT <span class="dn-arrow" aria-hidden="true">&#9654;</span></button>
 </nav>
 
-<!-- The cold call name picker: the class roster, drawn properly. -->
-<div class="picker" id="picker" role="dialog" aria-modal="true" aria-label="Cold call name picker">
+<!-- The random name picker: the class roster, drawn properly. Cold call is a switch. -->
+<div class="picker" id="picker" role="dialog" aria-modal="true" aria-label="Random name picker">
   <div class="picker-card" id="pickerCard">
     <div class="pk-head">
-      <span class="pk-title">COLD CALL &middot; 101ICTB</span>
-      <span class="pk-hands">HANDS STAY DOWN</span>
+      <span class="pk-title">RANDOM NAME PICKER &middot; 101ICTB</span>
+      <button class="pk-btn pk-cc" id="pkCCMode" type="button" aria-pressed="false">cold call mode: off</button>
+      <span class="pk-hands cc-only" id="pkHands">HANDS STAY DOWN</span>
       <button class="pk-close" id="pkClose" type="button" aria-label="Close the picker">&#10005; close</button>
     </div>
     <div class="pk-body">
       <div class="pk-stage">
-        <p class="pk-kicker" id="pkRound">round 1</p>
-        <p class="pk-name idle" id="pkName">press DRAW</p>
-        <p class="pk-where" id="pkWhere">nobody drawn yet</p>
-        <p class="pk-line partner empty" id="pkPartner"></p>
-        <p class="pk-line ratio empty" id="pkRatio"></p>
-        <div class="pk-wait blank" id="pkWait" role="status" aria-live="polite"></div>
+        <p class="pk-kicker" id="pkRound">11 of 11 still to be picked</p>
+        <div class="pk-flip" id="pkFlip" role="status" aria-live="polite">
+          <div class="pk-flip-inner" id="pkFlipInner">
+            <div class="pk-face idle" id="pkFaceA">press PICK A NAME</div>
+            <div class="pk-face back idle" id="pkFaceB"></div>
+          </div>
+        </div>
+        <p class="pk-where cc-only" id="pkWhere">nobody picked yet</p>
+        <p class="pk-line partner empty cc-only" id="pkPartner"></p>
+        <p class="pk-line ratio empty cc-only" id="pkRatio"></p>
+        <div class="pk-wait blank cc-only" id="pkWait" role="status" aria-live="polite"></div>
         <div class="pk-actions">
-          <button class="pk-draw" id="pkDraw" type="button">DRAW NEXT NAME</button>
-          <button class="pk-btn" id="pkPass" type="button" disabled>PASS, come back to them</button>
-          <button class="pk-btn" id="pkReturn" type="button" disabled>RETURN TO</button>
+          <button class="pk-draw" id="pkDraw" type="button">PICK A NAME</button>
+          <button class="pk-btn cc-only" id="pkPass" type="button" disabled>PASS, come back to them</button>
+          <button class="pk-btn cc-only" id="pkReturn" type="button" disabled>RETURN TO</button>
         </div>
       </div>
       <div class="pk-side pk-scroll">
-        <p class="pk-h">// how this draw runs</p>
-        <div class="pk-chips">
-          <button class="pk-btn" id="pkPartnerMode" type="button">partner mode: off</button>
-          <button class="pk-btn" id="pkRatioMode" type="button">build ratio: off</button>
-          <button class="pk-btn" id="pkReset" type="button">reshuffle the round</button>
+        <p class="pk-h cc-only">// the cold call kit</p>
+        <div class="pk-chips cc-only">
+          <button class="pk-btn" id="pkPartnerMode" type="button">ask for the partner&#39;s answer: off</button>
+          <button class="pk-btn" id="pkRatioMode" type="button">add to what the last person said: off</button>
+          <button class="pk-btn" id="pkReset" type="button">start the round again</button>
         </div>
-        <p class="pk-h">// come back to &middot; No Opt Out</p>
-        <div class="pk-chips" id="pkQueue"></div>
+        <p class="pk-h cc-only">// still owes you an answer</p>
+        <div class="pk-chips cc-only" id="pkQueue"></div>
         <p class="pk-h">// here today &middot; tap a name to mark it away</p>
         <div class="pk-chips" id="pkRoster"></div>
         <p class="pk-note" id="pkNote"></p>
@@ -2189,21 +2212,27 @@ class DeckNav {
 }
 
 /* ===========================================
-   COLD CALL NAME PICKER
+   RANDOM NAME PICKER
    The roster is 101ICTB off the school's own class list, and the table numbers
    are the seating plan for IG04. Full names are on screen by Igor's ruling for
    this deck. Nothing here is generated: no name is invented and none is left out.
-   The discipline the picker carries, straight off the TLAC set and OTP slide 6:
-     no repeats until everyone has been called, then it reshuffles;
-     absent students are switched off before the lesson and never drawn;
+
+   PLAIN MODE is what opens, every time: the count, the flipping name card and
+   one button. Even here the draw stays honest, because those two rules are the
+   picker and not a technique: no repeats until everybody has been picked and
+   then the round starts again with the count saying so, and a name marked away
+   is never picked.
+
+   COLD CALL MODE is the switch in the header, and it brings the rest of the
+   discipline back, all of it:
      three seconds of visible Wait Time after a name lands, because the answer
        is not taken before that;
-     a come back to queue, so a pass is a return and not an escape (No Opt Out),
-       and the teacher can see who is still owed;
+     a come back queue, so a pass is a return and not a way out, and the
+       teacher can see who still owes an answer;
      partner mode, so after a Turn and Talk the question is what did your
        partner say;
-     a Build Ratio prompt, so the next student adds to the last answer;
-     hands stay down, said out loud every time it opens.
+     the add to the last answer prompt, naming the person before;
+     hands stay down, on screen the moment the switch goes on.
    =========================================== */
 const ROSTER = [
   { first:'Abdulla', full:'Abdulla Alsuwaidi', table:1 },
@@ -2226,12 +2255,13 @@ class ColdCallPicker {
     if (!this.wrap) return;
     const id = (x) => document.getElementById(x);
     this.el = {
-      round:  id('pkRound'),  name: id('pkName'),   where: id('pkWhere'),
+      round:  id('pkRound'),  where: id('pkWhere'), hands: id('pkHands'),
+      flipInner: id('pkFlipInner'), faceA: id('pkFaceA'), faceB: id('pkFaceB'),
       partner:id('pkPartner'),ratio:id('pkRatio'),  wait:  id('pkWait'),
       draw:   id('pkDraw'),   pass: id('pkPass'),   ret:   id('pkReturn'),
       queue:  id('pkQueue'),  roster:id('pkRoster'),note:  id('pkNote'),
       pMode:  id('pkPartnerMode'), rMode: id('pkRatioMode'), reset: id('pkReset'),
-      close:  id('pkClose')
+      cc:     id('pkCCMode'), close: id('pkClose')
     };
     /* A copy saved with Cmd+S while the picker was open must not reopen with it. */
     document.body.classList.remove('picker-open');
@@ -2242,6 +2272,12 @@ class ColdCallPicker {
     this.previous = null;
     this.partnerMode = false;
     this.ratioMode = false;
+    /* Plain every time it opens. Cold call is a switch, never the default. */
+    this.ccMode = false;
+    this.wrap.classList.remove('cc');
+    /* The card turns another half turn on every pick, so the two faces take it
+       in turns to carry the name, exactly like the coin on slide 15. */
+    this.flipDeg = 0;
     this.waitTimer = null;
     this.waitLeft = 0;
     this.round = 0;
@@ -2269,7 +2305,8 @@ class ColdCallPicker {
     const k = Math.floor(Math.random() * this.pool.length);
     const picked = this.pool.splice(k, 1)[0];
     this.commit(picked);
-    this.note = fresh ? 'Everybody had been called, so the round reshuffled. This is round ' + this.round + '.' : '';
+    this.flipTo(ROSTER[picked].full);
+    this.note = fresh ? 'Everybody had been picked, so the round started again. This is round ' + this.round + '.' : '';
     this.render();
   }
   /* One student, named, whatever the reason: a fresh draw or a return. */
@@ -2291,7 +2328,8 @@ class ColdCallPicker {
   }
   returnTo(i) {
     this.commit(i);
-    this.note = 'Back to ' + ROSTER[i].full + '. No Opt Out: they give the answer now.';
+    this.flipTo(ROSTER[i].full);
+    this.note = 'Back to ' + ROSTER[i].full + '. A pass is a return, so they give the answer now.';
     this.render();
   }
   toggleAbsent(i) {
@@ -2312,8 +2350,26 @@ class ColdCallPicker {
     this.newRound();
     this.current = null; this.previous = null; this.queue = [];
     this.stopWait();
+    this.paintFace('press PICK A NAME', true);
     this.note = 'Fresh round. Everybody who is here is back in the draw.';
     this.render();
+  }
+  /* ---- the flip: the slide 15 coin, carrying a name ----
+     One more half turn each time, so the face coming round is the one that
+     gets the new name and the turn always runs the full 1.6 seconds. ---- */
+  frontFace() { return (this.flipDeg / 180) % 2 === 0 ? this.el.faceA : this.el.faceB; }
+  backFace()  { return (this.flipDeg / 180) % 2 === 0 ? this.el.faceB : this.el.faceA; }
+  paintFace(text, idle) {
+    const f = this.frontFace();
+    f.textContent = text;
+    f.classList.toggle('idle', !!idle);
+  }
+  flipTo(text) {
+    const f = this.backFace();
+    f.textContent = text;
+    f.classList.remove('idle');
+    this.flipDeg += 180;
+    this.el.flipInner.style.transform = 'rotateY(' + this.flipDeg + 'deg)';
   }
   /* ---- Wait Time: three seconds, on screen, every single time ---- */
   startWait() {
@@ -2329,9 +2385,11 @@ class ColdCallPicker {
   stopWait() { clearInterval(this.waitTimer); this.waitTimer = null; }
   paintWait() {
     const el = this.el.wait;
-    if (this.current === null) { el.className = 'pk-wait blank'; el.textContent = ''; return; }
-    if (this.waitLeft > 0) { el.className = 'pk-wait counting'; el.textContent = 'WAIT ' + this.waitLeft; }
-    else { el.className = 'pk-wait ready'; el.textContent = 'ASK NOW'; }
+    /* cc-only stays on the element, always: it is what keeps the wait pill off
+       the screen in plain mode. Rewriting className here once dropped it. */
+    if (this.current === null) { el.className = 'pk-wait cc-only blank'; el.textContent = ''; return; }
+    if (this.waitLeft > 0) { el.className = 'pk-wait cc-only counting'; el.textContent = 'WAIT ' + this.waitLeft; }
+    else { el.className = 'pk-wait cc-only ready'; el.textContent = 'ASK NOW'; }
   }
   /* ---- painting ---- */
   buildRoster() {
@@ -2347,15 +2405,13 @@ class ColdCallPicker {
   render() {
     const here = this.present().length;
     const left = this.pool.filter(i => !this.absent.has(i)).length;
-    this.el.round.textContent = 'round ' + this.round + ' · ' + left + ' of ' + here + ' still to be called';
+    /* The quiet count line, and it is the only place the round number shows up. */
+    this.el.round.textContent = (this.round > 1 ? 'round ' + this.round + ' · ' : '')
+      + left + ' of ' + here + ' still to be picked';
     if (this.current === null) {
-      this.el.name.textContent = 'press DRAW';
-      this.el.name.classList.add('idle');
-      this.el.where.textContent = here + ' here today · nobody drawn yet';
+      this.el.where.textContent = here + ' here today · nobody picked yet';
     } else {
       const s = ROSTER[this.current];
-      this.el.name.textContent = s.full;
-      this.el.name.classList.remove('idle');
       this.el.where.textContent = 'table ' + s.table + (this.absent.has(this.current) ? ' · marked away' : '');
     }
     const mates = this.current === null ? [] : this.tableMates(this.current).filter(i => !this.absent.has(i));
@@ -2366,24 +2422,29 @@ class ColdCallPicker {
       this.el.partner.classList.remove('empty');
     } else this.el.partner.classList.add('empty');
     if (this.ratioMode && this.current !== null && this.previous !== null) {
-      this.el.ratio.textContent = 'Build on it: add to what ' + ROSTER[this.previous].full + ' just said, do not start again.';
+      this.el.ratio.textContent = 'Ask: add to what ' + ROSTER[this.previous].full + ' said. Do not start again.';
       this.el.ratio.classList.remove('empty');
     } else if (this.ratioMode) {
-      this.el.ratio.textContent = 'Build Ratio is on. From the second name, every answer adds to the one before it.';
+      this.el.ratio.textContent = 'From the second name on, every answer adds to the one before it.';
       this.el.ratio.classList.remove('empty');
     } else this.el.ratio.classList.add('empty');
     this.el.pass.disabled = (this.current === null);
     this.el.ret.disabled = !this.queue.length;
     this.el.ret.textContent = this.queue.length ? 'RETURN TO ' + ROSTER[this.queue[0]].first.toUpperCase() : 'RETURN TO';
-    this.el.pMode.textContent = 'partner mode: ' + (this.partnerMode ? 'on' : 'off');
+    this.el.pMode.textContent = 'ask for the partner\u2019s answer: ' + (this.partnerMode ? 'on' : 'off');
     this.el.pMode.classList.toggle('on', this.partnerMode);
-    this.el.rMode.textContent = 'build ratio: ' + (this.ratioMode ? 'on' : 'off');
+    /* Plain words: the technique name means nothing to anyone who has not met it. */
+    const prevName = this.previous !== null ? ROSTER[this.previous].first : 'the last person';
+    this.el.rMode.textContent = 'add to what ' + prevName + ' said: ' + (this.ratioMode ? 'on' : 'off');
     this.el.rMode.classList.toggle('on', this.ratioMode);
+    this.el.cc.textContent = 'cold call mode: ' + (this.ccMode ? 'on' : 'off');
+    this.el.cc.classList.toggle('on', this.ccMode);
+    this.el.cc.setAttribute('aria-pressed', this.ccMode ? 'true' : 'false');
     this.el.queue.innerHTML = '';
     if (!this.queue.length) {
       const p = document.createElement('span');
       p.className = 'pk-note';
-      p.textContent = 'nobody owes you an answer';
+      p.textContent = 'nobody owes you an answer yet';
       this.el.queue.appendChild(p);
     } else this.queue.forEach(i => {
       const b = document.createElement('button');
@@ -2402,10 +2463,27 @@ class ColdCallPicker {
     this.el.note.textContent = this.note;
     this.paintWait();
   }
+  /* ---- the cold call switch ---- */
+  setMode(on) {
+    this.ccMode = !!on;
+    this.wrap.classList.toggle('cc', this.ccMode);
+    /* a line about a pass or a return means nothing once the kit is put away */
+    if (!this.ccMode) this.note = '';
+    if (this.ccMode && this.el.hands) {
+      /* hands stay down flashes when the kit arrives, the way it does on open */
+      this.el.hands.style.animation = 'none';
+      void this.el.hands.offsetWidth;
+      this.el.hands.style.animation = '';
+    }
+    this.render();
+  }
   /* ---- open, close, keys ---- */
   isOpen() { return document.body.classList.contains('picker-open'); }
   open() {
     if (this.isOpen()) return;
+    /* Plain every single time it opens, so what is on screen mid-lesson is the
+       count, the name and one button unless Igor asks for the rest. */
+    this.setMode(false);
     document.body.classList.add('picker-open');
     this.wrap.classList.add('open');
     this.render();
@@ -2427,6 +2505,7 @@ class ColdCallPicker {
     tap(this.el.draw, () => this.draw());
     tap(this.el.pass, () => this.pass());
     tap(this.el.ret,  () => { if (this.queue.length) this.returnTo(this.queue[0]); });
+    tap(this.el.cc, () => this.setMode(!this.ccMode));
     tap(this.el.pMode, () => { this.partnerMode = !this.partnerMode; this.render(); });
     tap(this.el.rMode, () => { this.ratioMode  = !this.ratioMode;  this.render(); });
     tap(this.el.reset, () => this.reset());
@@ -2440,14 +2519,14 @@ class ColdCallPicker {
     this.wrap.addEventListener('wheel', hold, { passive: false });
     this.wrap.addEventListener('touchmove', hold, { passive: false });
     /* A presenter clicker has two buttons and no Esc, so it gets both jobs:
-       forward draws the next name, which is the common thing, and back closes
+       forward picks the next name, which is the common thing, and back closes
        the picker and hands the deck back. */
     const DRAW_KEYS  = ['ArrowRight', 'ArrowDown', 'PageDown', ' '];
     const CLOSE_KEYS = ['ArrowLeft', 'ArrowUp', 'PageUp', 'Escape'];
     document.addEventListener('keydown', (e) => {
       if (e.target.isContentEditable || ['INPUT','TEXTAREA','IFRAME'].includes(e.target.tagName)) return;
       if (!this.isOpen()) {
-        /* C for cold call, the same shape as N notes, S sheet, E edit, F fullscreen */
+        /* C for the random name picker, the same shape as N notes, S sheet, E edit, F fullscreen */
         if ((e.key === 'c' || e.key === 'C') && !e.metaKey && !e.ctrlKey && !e.altKey && !sheetZoomOpen()) {
           e.preventDefault(); this.open();
         }
