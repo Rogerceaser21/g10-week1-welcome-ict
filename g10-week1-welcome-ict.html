@@ -290,7 +290,7 @@ ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
 .two-col { display:grid; grid-template-columns:1fr auto; gap:clamp(0.9rem,2.6vw,2.2rem); align-items:center; }
 .two-col.img-left { grid-template-columns:auto 1fr; }
 /* The text column takes whatever the thumbnail leaves, up to a sane reading width. */
-.two-col > div:not(.col-img) { max-width:min(100%, 1700px); }
+.two-col > div:not(.col-img) { max-width:min(100%, 1700px); min-width:min(100%, 34ch); }
 /* On a genuinely narrow or short screen the sheet PICTURE stands down, but its
    "Open sheet" button stays, so the sheet is always one tap away. The old rules
    hid the whole figure, and body.scaled-up hid it on every screen the moment the
@@ -305,15 +305,23 @@ ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
 .line-order li::before { content:counter(lq) " "; color:var(--p-z); font-weight:700; }
 
 .photo { box-shadow:0 0 0 var(--px) var(--panel), 10px 10px 0 rgba(0,0,0,.4); background:#000; }
-.portrait { max-height:min(46vh,340px); width:auto; background:#fff;
+.portrait { width:100%; height:auto; max-height:none; background:#fff;
   box-shadow:0 0 0 var(--px) var(--p-i), 10px 10px 0 rgba(0,0,0,.4); }
-.photo-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr)); gap:clamp(6px,1vw,12px); }
+/* The five photos share the room as one grid. fitPictures picks the column
+   count that makes each photo as big as the grid allows: fewer columns means
+   wider cells, so it tries 1 column first and stops at the first count whose
+   rows fit. Nothing here is capped by a viewport fraction any more. */
+.photo-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:clamp(6px,1vw,12px); }
 .photo-grid figure { display:flex; flex-direction:column; gap:4px; }
-.photo-grid img { width:100%; height:clamp(90px,17vh,170px); object-fit:cover; max-height:none;
-  box-shadow:0 0 0 3px var(--panel), 6px 6px 0 rgba(0,0,0,.4); }
-.photo-grid figcaption { font-family:var(--font-label); font-size:calc(clamp(0.9rem,1.4vw,1.15rem) * var(--font-scale)); color:var(--p-o); line-height:1.15; }
-.wide-img { align-self:center; max-width:min(92vw,1180px); }
-.wide-img img { width:100%; max-height:min(56vh,440px); object-fit:contain;
+.photo-grid img { width:100%; height:auto; aspect-ratio:3 / 2; object-fit:cover; max-height:none;
+  cursor:zoom-in; box-shadow:0 0 0 3px var(--panel), 6px 6px 0 rgba(0,0,0,.4); }
+.photo-grid figcaption { font-family:var(--font-label); font-size:calc(clamp(0.9rem,1.4vw,1.15rem) * var(--font-scale)); color:var(--p-o); line-height:1.15;
+  display:flex; align-items:center; justify-content:space-between; gap:0.5em; }
+/* the photo's own "See it big" rides in the caption row it already had, so the
+   button costs the picture no height at all */
+.photo-grid figcaption .pic-open { font-size:0.86em; padding:0.06em 0.5em; flex:none; }
+.wide-img { align-self:center; }
+.wide-img img { width:100%; height:auto; max-height:none; object-fit:contain;
   box-shadow:0 0 0 var(--px) var(--panel), 10px 10px 0 rgba(0,0,0,.4); }
 
 /* poster, shown as big as the slide allows */
@@ -327,7 +335,8 @@ ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
    bottom padding (now zero, the foot follows the poster immediately anyway)
    and out of the tighter bar, so the poster itself keeps its full 72vh. */
 .poster-foot { padding:0 1rem clamp(52px,5.43vh,57px); }
-.poster-wrap img { max-height:min(72vh, 100%); max-width:92vw; object-fit:contain; background:#fff;
+.poster-wrap { min-width:0; }
+.poster-wrap img { max-height:100%; max-width:100%; object-fit:contain; background:#fff; cursor:zoom-in;
   box-shadow:0 0 0 var(--px) var(--panel-2), 12px 12px 0 rgba(0,0,0,.35); }
 
 /* ===========================================
@@ -341,21 +350,21 @@ ul.plain li::before { content:"\25B8  "; color:var(--p-i); font-weight:800; }
   box-shadow:0 0 0 var(--px) var(--panel-2), 10px 10px 0 rgba(0,0,0,.35);
   transform-origin:top center; }
 /* max-height:none overrides the global picture cap: the sheet is sized by
-   fitSheets against the slide, and its box must keep the page's exact shape
+   fitPictures against the slide, and its box must keep the page's exact shape
    or the ring rectangles stop landing on the right box */
 .sheet-img { display:block; width:100%; height:auto; max-height:none; aspect-ratio:3000 / 1688;
   position:relative; z-index:0; }
-/* The thumbnail is bounded by the window HEIGHT as well as its width, so the sheet
-   can never grow into the space the words need and can never be shrunk away to
-   rescue a slide. Detail lives in the lightbox, one button or one tap away. */
-.sheet-fig { position:relative; align-self:center; margin-inline:auto; width:100%;
-  max-width:min(26vw, 36vh, 520px);
-  display:flex; flex-direction:column; align-items:center; gap:clamp(6px, 0.9vh, 12px); }
-/* 94vh. Slide 4 is the sheet walkthrough and the sheet is shown as big as the
-   slide allows, so the navigation bar never buys its room from this figure: the
-   bar was made tighter and the bottom gutter cut to match instead. Measured at
-   both of Igor's window shapes, the sheet clears the bar with room over. */
-.sheet-fig.big { max-width:min(62vw, 94vh, 1500px); }
+/* No viewport-fraction cap any more, on this figure or any other. The words are
+   laid out first at their fixed size and fitPictures then hands the picture every
+   pixel that is left, width or height, whichever runs out first. The width it
+   measures arrives here as --pic-w. Detail is still one tap away in the pop-up. */
+.picfig, .sheet-fig { position:relative; align-self:center; margin-inline:auto;
+  width:var(--pic-w, 100%); max-width:100%; min-width:0;
+  display:flex; flex-direction:column; align-items:center; gap:clamp(4px, 0.7vh, 10px); }
+/* every picture inside a fitted figure fills that figure's width and keeps its
+   own shape; the global img cap does not apply to a picture Igor points at */
+.picfig > img, .picfig .photo { display:block; width:100%; height:auto; max-height:none;
+  max-width:100%; object-fit:contain; cursor:zoom-in; }
 /* every ring zone is a percentage rectangle measured off the exported page,
    so a ring always lands on the real box, at any projector size */
 .sh-zone { position:absolute; left:var(--l); top:var(--t); width:var(--w); height:var(--h);
@@ -505,33 +514,60 @@ body.hide-teacher [data-teacher-only="true"] { display:none; }
 body.edit-active [contenteditable="true"] { outline:2px dashed var(--p-o); outline-offset:2px; }
 
 /* ===========================================
-   THE STUDENT SHEET LIGHTBOX
-   The sheet sits in the slide as a thumbnail with its ring, and opens full
-   screen from the "Open sheet" button, from the thumbnail itself, or with the
-   S key. Esc, the close button, a click anywhere off the page, or any deck
-   navigation key closes it. While it is open the deck's own arrows do nothing,
-   so a presenter clicker can never walk the class off the slide underneath.
-   No invisible hot zone anywhere: the only way in is a labelled button, the
-   sheet picture itself, or S.
+   THE PICTURE LIGHTBOX
+   EVERY picture in the deck opens full screen, edge to edge: the student
+   sheet, the seating plan, the poster, the headshot, the collage and each of
+   the five travel photos. Three ways in, all of them labelled or visible: the
+   button under the picture ("Open sheet" on the sheet, "See it big" on every
+   other picture), the picture itself, or the S key. Inside, left and right
+   step through that slide's pictures when it has several. Out: Esc, the close
+   button, a click on the backdrop, or any other deck key. While it is open the
+   deck's own arrows, wheel and swipe do nothing and edit mode cannot arm, so a
+   presenter clicker can never walk the class off the slide underneath.
+   No invisible hot zone anywhere.
    =========================================== */
-.sheet-open { font-family:var(--font-label); font-size:calc(clamp(1rem,min(1.9vw,2.7vh),2.1rem) * var(--font-scale));
+.pic-open, .sheet-open { font-family:var(--font-label); font-size:calc(clamp(1rem,min(1.9vw,2.7vh),2.1rem) * var(--font-scale));
   background:var(--p-i); color:var(--ink); border:0; padding:0.18em 0.8em; cursor:zoom-in;
   display:inline-flex; align-items:center; gap:0.45em; letter-spacing:.03em; line-height:1.25;
   box-shadow:inset calc(var(--px) * -1) calc(var(--px) * -1) 0 rgba(0,0,0,.32), inset var(--px) var(--px) 0 rgba(255,255,255,.4); }
-.sheet-open:hover { filter:brightness(1.1); }
-.sheet-open:focus-visible { outline:3px solid var(--p-o); outline-offset:3px; }
+.pic-open:hover, .sheet-open:hover { filter:brightness(1.1); }
+.pic-open:focus-visible, .sheet-open:focus-visible { outline:3px solid var(--p-o); outline-offset:3px; }
 .sheet .sheet-img { cursor:zoom-in; }
+/* the poster's button is built to the exact box of the caption chip it sits
+   beside, so the row it shares with that chip is not one pixel taller than it
+   was and the poster gives up nothing for it */
+.poster-foot .pic-open { font-size:calc(var(--label-size) * 0.8); padding:0.08em 0.62em; line-height:1.15; }
 
-/* The bands top and bottom are the close button's and the hint's own room, so
-   the page itself is never sat on by either. The width is driven by the window
-   HEIGHT (the sheet is a 3000x1688 landscape page) so it fills whatever is left. */
+/* Edge to edge. The only room the picture gives up is the thin band the close
+   button and the hint sit in, top and bottom; sideways it runs to the glass.
+   In sheet mode the width is driven by the window HEIGHT (the sheet is a
+   3000x1688 landscape page); in plain mode the picture itself is capped by
+   both the width and the height of what is left, and takes whichever runs out
+   first, so it always fills the wall. */
 .sheet-zoom { position:fixed; inset:0; z-index:10050; display:none;
-  align-items:center; justify-content:center; background:rgba(5,7,14,.92);
-  padding:clamp(52px,7vh,78px) clamp(12px,1.4vw,26px) clamp(40px,5vh,60px);
+  align-items:center; justify-content:center; background:rgba(5,7,14,.94);
+  padding:clamp(44px,6vh,66px) clamp(4px,0.5vw,10px) clamp(34px,4.4vh,52px);
   opacity:0; transition:opacity .22s var(--ease-out-expo); }
 .sheet-zoom.open { display:flex; opacity:1; }
-.sheet-zoom-inner { width:min(94vw, 150vh); position:relative; cursor:zoom-out; }
+.sheet-zoom-inner { width:min(99vw, 150vh); max-height:100%; position:relative; cursor:zoom-out; }
 .sheet-zoom-inner .sheet { width:100%; transform:none !important; box-shadow:0 0 0 var(--px) var(--panel-2), 0 24px 70px rgba(0,0,0,.7); }
+/* Plain mode takes the whole stage, width and height, and the picture is
+   contained inside it: a small picture is brought UP to fill the wall and a
+   big one comes down to fit, both keeping their shape. A percentage max-height
+   would have resolved to nothing against an auto-height box, which is what let
+   a 1400px poster run off the bottom of a 982px window. */
+.sheet-zoom-inner.plain { width:100%; height:100%; max-width:100%; display:flex; align-items:center; justify-content:center; }
+.sheet-zoom-inner.plain img { display:block; width:100%; height:100%; max-width:100%; max-height:100%;
+  object-fit:contain; background:transparent; box-shadow:none; }
+.sheet-zoom-step { position:fixed; top:50%; transform:translateY(-50%); z-index:3;
+  font-family:var(--font-label); font-size:clamp(1.4rem,3.4vh,2.6rem); background:rgba(21,27,46,.9); color:#EEF2FF;
+  border:0; min-width:52px; min-height:64px; cursor:pointer; display:none;
+  box-shadow:inset -3px -3px 0 rgba(0,0,0,.45), inset 3px 3px 0 rgba(255,255,255,.16); }
+.sheet-zoom-step:hover { filter:brightness(1.4); }
+.sheet-zoom-step:focus-visible { outline:3px solid var(--p-o); outline-offset:3px; }
+.sheet-zoom-step.show { display:block; }
+#sheetZoomPrev { left:clamp(4px,0.5vw,10px); }
+#sheetZoomNext { right:clamp(4px,0.5vw,10px); }
 .sheet-zoom-close { position:fixed; top:clamp(10px,2.2vh,22px); right:clamp(10px,1.6vw,24px); z-index:2;
   font-family:var(--font-label); font-size:clamp(1.2rem,2.2vh,1.9rem); background:var(--p-z); color:#fff;
   border:0; padding:0.18em 0.7em; cursor:pointer;
@@ -705,8 +741,8 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
         </ol>
         <div class="tblock o" data-fragment="1" style="margin-top:calc(var(--element-gap) * 0.2); padding-top:0.36em; padding-bottom:0.36em"><b>Self-check:</b> your number above is your place in the line. Say it to yourself when you get there. If two of you claim the same number, one of you is in the wrong spot.</div>
       </div>
-      <div class="col-img reveal" style="max-width:min(46vw,700px)">
-        <img class="photo" src="assets/seating-initials.png" alt="Seating plan for IG04, showing each table and the initials of the student sitting there" style="width:100%; max-height:62vh">
+      <div class="col-img picfig reveal">
+        <img class="photo" src="assets/seating-initials.png" alt="Seating plan for IG04, showing each table and the initials of the student sitting there">
         <p class="small" style="margin-top:6px; font-family:var(--font-label); font-size:var(--label-size); color:var(--p-i)">the seating plan for IG04 &middot; find your table as you walk in</p>
         <p data-teacher-only="true" style="margin-top:8px">
           <a class="linkbtn gold" data-teacher-only="true" href="https://docs.google.com/presentation/d/1kD-_kfR5YJZA6YTBsMhgRQG44PpTvgGZwYV4GcWB40M/edit" target="_blank" rel="noopener" style="font-size:calc(clamp(0.68rem,1.05vw,0.88rem) * var(--font-scale)); padding:0.22em 0.6em">&#9654; open the seating plan (full names)</a>
@@ -874,7 +910,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
   <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// player_profile</p>
     <div class="two-col img-left">
-      <div class="col-img reveal"><img class="portrait" src="assets/igor-headshot.png" alt="Mr Igor"></div>
+      <div class="col-img picfig reveal"><img class="portrait" src="assets/igor-headshot.png" alt="Mr Igor"></div>
       <div>
         <h2 class="reveal">Mr Igor</h2>
         <ul class="plain">
@@ -894,7 +930,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
   <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// things_i_like</p>
     <h2 class="reveal">Things I like</h2>
-    <div class="wide-img reveal"><img src="assets/igor-likes.jpg" alt="A collage of Mr Igor's interests: wristwatches, basketball, Australian Football League, chess, table tennis and food"></div>
+    <div class="wide-img picfig reveal"><img src="assets/igor-likes.jpg" alt="A collage of Mr Igor's interests: wristwatches, basketball, Australian Football League, chess, table tennis and food"></div>
     <p class="reveal" style="margin-top:var(--element-gap)"><span class="chip dark">watches &middot; basketball &middot; AFL &middot; table tennis &middot; chess &middot; food</span></p>
   </div>
 </section>
@@ -1317,7 +1353,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
   </div>
   <div class="notes-body" id="notesBody">(no notes for this slide)</div>
 </aside>
-<div class="notes-hint" id="notesHint">N notes &middot; S sheet &middot; E edit &middot; &#8984;S save copy</div>
+<div class="notes-hint" id="notesHint">N notes &middot; S picture big &middot; E edit &middot; &#8984;S save copy</div>
 
 <!-- controls pill -->
 <div class="font-scale-ctrl" id="fontScaleCtrl">
@@ -1333,10 +1369,12 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
 </div>
 
 <!-- the student sheet, full screen. Filled from the current slide's own sheet, rings and all. -->
-<div class="sheet-zoom" id="sheetZoom" role="dialog" aria-modal="true" aria-label="Student sheet, full screen">
+<div class="sheet-zoom" id="sheetZoom" role="dialog" aria-modal="true" aria-label="Picture, full screen">
   <div class="sheet-zoom-inner" id="sheetZoomInner"></div>
-  <button class="sheet-zoom-close" id="sheetZoomClose" type="button" aria-label="Close the sheet">&#10005; close</button>
-  <p class="sheet-zoom-hint">Esc, click anywhere, or press S to close</p>
+  <button class="sheet-zoom-step" id="sheetZoomPrev" type="button" aria-label="The picture before this one">&#9664;</button>
+  <button class="sheet-zoom-step" id="sheetZoomNext" type="button" aria-label="The next picture on this slide">&#9654;</button>
+  <button class="sheet-zoom-close" id="sheetZoomClose" type="button" aria-label="Close the picture">&#10005; close</button>
+  <p class="sheet-zoom-hint" id="sheetZoomHint">Esc, click anywhere, or press S to close</p>
 </div>
 
 <!-- On-screen navigation, so a lesson with no clicker in the room still moves.
@@ -1406,15 +1444,7 @@ function buildSheets() {
   document.querySelectorAll('.sheet-slot').forEach(slot => {
     slot.appendChild(tpl.content.cloneNode(true));
     const sheet = slot.querySelector('.sheet');
-    /* Every point of use gets a labelled button. It is a real <button> inside the
-       slide, not an invisible hot zone, and it is not in the inline editor's
-       selector, so it can never put the projector into edit mode. */
-    const open = document.createElement('button');
-    open.type = 'button';
-    open.className = 'sheet-open';
-    open.innerHTML = '\uD83D\uDD0D Open sheet';
-    open.setAttribute('aria-label', 'Open the student sheet full screen');
-    slot.appendChild(open);
+    slot.appendChild(makeOpenBtn('Open sheet', 'Open the student sheet full screen', 'sheet-open'));
     const spec = (slot.dataset.rings || '').split(',').map(s => s.trim()).filter(Boolean);
     if (!spec.length) return;
     sheet.classList.add('has-ring');
@@ -1427,6 +1457,43 @@ function buildSheets() {
       holes.push(['--l', '--t', '--w', '--h'].map(v => parseFloat(el.style.getPropertyValue(v))));
     });
     if (holes.length) sheet.insertBefore(buildWash(holes), sheet.querySelector('.sh-zone'));
+  });
+}
+
+/* Every picture in the deck gets a labelled button under it: a real <button>
+   inside the slide, never an invisible hot zone, and never in the inline
+   editor's selector, so it can never put the projector into edit mode. The
+   sheet keeps the words Igor already knows, "Open sheet"; every other picture
+   says "See it big". */
+function makeOpenBtn(label, aria, extra) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'pic-open' + (extra ? ' ' + extra : '');
+  b.innerHTML = '\uD83D\uDD0D ' + label;
+  b.setAttribute('aria-label', aria);
+  return b;
+}
+function buildPictureButtons() {
+  document.querySelectorAll('.picfig').forEach(fig => {
+    if (fig.querySelector(':scope > .pic-open')) return;
+    fig.appendChild(makeOpenBtn('See it big', 'Open this picture full screen'));
+  });
+  document.querySelectorAll('.photo-grid figure').forEach(fig => {
+    const cap = fig.querySelector('figcaption');
+    if (!cap || cap.querySelector('.pic-open')) return;
+    cap.appendChild(makeOpenBtn('See it big', 'Open this photo full screen'));
+  });
+  document.querySelectorAll('.poster-wrap').forEach(wrap => {
+    const foot = wrap.parentElement && wrap.parentElement.querySelector('.poster-foot');
+    if (!foot || foot.querySelector('.pic-open')) return;
+    /* into the row the first caption chip already occupies, so the poster gives
+       up no height at all for its button */
+    const first = foot.firstElementChild;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:0.5em 0.8em';
+    foot.insertBefore(row, first);
+    row.appendChild(first);
+    row.appendChild(makeOpenBtn('See it big', 'Open the poster full screen'));
   });
 }
 
@@ -1473,41 +1540,63 @@ function slideOverflow(content) {
   return Math.max(0, top - minY) + Math.max(0, maxY - bottom);
 }
 
-/* A last-resort guard only. The thumbnail is bounded by CSS (width AND window
-   height), so on any sane window it never overruns and this never fires. The old
-   0.35 floor is what turned the sheet into a postage stamp: compounded with the
-   content-box scale below it took the sheet to about a fifth of nominal size, and
-   at font scale 1.1 it measured 151px wide for a 3000px page. The floor is 0.8
-   now, and anything that does fire is reported to the console rather than hidden. */
-function fitSheets() {
-  const figs = Array.from(document.querySelectorAll('.sheet-fig'));
-  figs.forEach(fig => {
-    const sheet = fig.querySelector('.sheet');
-    if (!sheet) return;
-    sheet.style.transform = 'none';
-    sheet.dataset.fitScale = '1';
-    fig.style.height = '';
+/* ===========================================
+   PICTURES: as big as the slide allows, always.
+   Igor's ruling, 2 September 2026: on every slide with a picture, the picture
+   is as big as the slide allows at rest, and one tap makes it fill the wall.
+   So: the words are laid out first, at their own fixed size, which nothing here
+   ever touches. Whatever room is then left inside the content box, between the
+   top gutter (timer pill, iSAMS pop-up) and the bottom gutter (navigation bar),
+   goes to the picture: every pixel of it, width or height, whichever runs out
+   first. No viewport-fraction cap, no scale-down to rescue a slide.
+   How the largest safe size is found, rather than guessed: the figure's width
+   is the one knob, and the test is the slide itself, measured. A picture that
+   is too wide pushes the words into a taller column, which shows up as vertical
+   overflow, or it pushes the row past the box, which shows up as horizontal
+   overflow. So we take the largest width that passes both, by halving. That
+   holds at any window shape and at any font scale, because both are re-measured
+   every time either changes; and because the accepted width is one that already
+   passed the overflow test, the picture can never push copy off the box and can
+   never hand fitSlides a slide to scale.
+   The floor is a thumbnail a finger can hit. If a slide's words genuinely fill
+   the screen on their own, the picture sits at that floor with its button, and
+   the picture never moves to a slide of its own.
+   =========================================== */
+const PIC_MIN = 128;
+function picFits(content) {
+  return slideOverflow(content) < 2 && content.scrollWidth <= content.clientWidth + 1;
+}
+function fitPictures() {
+  /* the five travel photos are one grid, so the knob there is the column count:
+     fewer columns means wider cells, so try widest first and stop at the first
+     count whose rows fit inside the room the words leave */
+  document.querySelectorAll('.photo-grid').forEach(grid => {
+    const content = grid.closest('.slide-content');
+    if (!content) return;
+    const cells = grid.children.length;
+    let picked = cells;
+    for (let cols = 1; cols <= cells; cols++) {
+      grid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+      if (picFits(content)) { picked = cols; break; }
+    }
+    grid.style.gridTemplateColumns = 'repeat(' + picked + ', 1fr)';
   });
-  for (let pass = 0; pass < 3; pass++) {
-    let changed = false;
-    figs.forEach(fig => {
-      const sheet = fig.querySelector('.sheet');
-      const content = fig.closest('.slide-content');
-      if (!sheet || !content) return;
-      const over = slideOverflow(content);
-      if (over < 3) return;
-      const rendered = sheet.getBoundingClientRect().height;
-      if (rendered < 60) return;
-      const current = parseFloat(sheet.dataset.fitScale || '1');
-      const next = Math.max(0.8, current * Math.max(0.85, (rendered - over - 8) / rendered));
-      if (Math.abs(next - current) < 0.005) return;
-      sheet.dataset.fitScale = next;
-      sheet.style.transform = 'scale(' + next + ')';
-      fig.style.height = Math.round(sheet.offsetHeight * next) + 'px';
-      changed = true;
-    });
-    if (!changed) break;
-  }
+
+  Array.from(document.querySelectorAll('.picfig, .sheet-fig')).forEach(fig => {
+    const content = fig.closest('.slide-content');
+    if (!content) return;
+    const cs = getComputedStyle(content);
+    const room = content.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const hi = Math.max(PIC_MIN, Math.floor(room));
+    const at = (w) => { fig.style.setProperty('--pic-w', Math.floor(w) + 'px'); return picFits(content); };
+    if (at(hi)) return;
+    let lo = PIC_MIN, best = PIC_MIN, top = hi;
+    for (let i = 0; i < 10 && top - lo > 4; i++) {
+      const mid = (lo + top) / 2;
+      if (at(mid)) { best = mid; lo = mid; } else { top = mid; }
+    }
+    at(best);
+  });
 }
 
 /* Last line of defence, and deliberately a very shallow one now. The base type
@@ -1559,7 +1648,7 @@ function fitSlides() {
   if (squeezed.length) console.warn('deck fit: these slides did not fit at the base type size and were scaled: ' + squeezed.join(', '));
 }
 
-function fitAll() { fitSheets(); fitSlides(); }
+function fitAll() { fitPictures(); fitSlides(); }
 
 /* True while the sheet lightbox is open. Every input path that moves the deck
    checks this first, so a presenter clicker, an arrow key, a scroll wheel or a
@@ -2083,28 +2172,47 @@ class CursorEffects {
    deck itself ignores while this is open, so a clicker closes the sheet with
    one press and moves on with the next).
    =========================================== */
-class SheetLightbox {
+class PictureLightbox {
   constructor(presentation) {
     this.presentation = presentation;
     this.wrap  = document.getElementById('sheetZoom');
     this.inner = document.getElementById('sheetZoomInner');
+    this.prevBtn = document.getElementById('sheetZoomPrev');
+    this.nextBtn = document.getElementById('sheetZoomNext');
+    this.hint  = document.getElementById('sheetZoomHint');
     this.opener = null;
+    this.list = [];
+    this.idx = 0;
     if (!this.wrap) return;
     document.getElementById('sheetZoomClose').addEventListener('click', () => this.close());
     this.wrap.addEventListener('click', () => this.close());
-    document.querySelectorAll('.sheet-open').forEach(btn => {
-      btn.addEventListener('click', (e) => { e.stopPropagation(); this.open(btn.closest('.sheet-fig')); });
+    this.inner.addEventListener('click', () => this.close());
+    this.prevBtn.addEventListener('click', (e) => { e.stopPropagation(); this.step(-1); });
+    this.nextBtn.addEventListener('click', (e) => { e.stopPropagation(); this.step(1); });
+
+    /* Every way in is a labelled button or the picture itself. Both are guarded
+       against edit mode, so a tap while the pencil is armed edits the slide and
+       never opens the pop-up, and a tap while the pop-up is open cannot arm it. */
+    const armed = () => document.body.classList.contains('edit-active');
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.pic-open');
+      if (btn) { e.stopPropagation(); this.open(this.figOf(btn)); return; }
+      if (armed()) return;
+      const hit = e.target.closest('.sheet-fig .sheet, .picfig > img, .photo-grid img, .poster-wrap img');
+      if (hit && !this.isOpen()) this.open(this.figOf(hit));
     });
-    document.querySelectorAll('.sheet-fig .sheet').forEach(sheet => {
-      sheet.addEventListener('click', () => {
-        if (document.body.classList.contains('edit-active')) return;
-        this.open(sheet.closest('.sheet-fig'));
-      });
-    });
-    const NAVKEYS = ['ArrowRight','ArrowLeft','ArrowUp','ArrowDown','PageUp','PageDown',' ','Home','End'];
+
+    const NAVKEYS = ['ArrowUp','ArrowDown','PageUp','PageDown',' ','Home','End'];
     document.addEventListener('keydown', (e) => {
       if (e.target.isContentEditable || ['INPUT','TEXTAREA','IFRAME'].includes(e.target.tagName)) return;
       if (this.isOpen()) {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          /* several pictures on this slide: the arrows walk them. One picture:
+             the arrows close, so a clicker press still gets Igor moving on. */
+          if (this.list.length > 1) this.step(e.key === 'ArrowRight' ? 1 : -1); else this.close();
+          return;
+        }
         if (e.key === 'Escape' || NAVKEYS.includes(e.key) || e.key === 's' || e.key === 'S') {
           e.preventDefault(); this.close();
         }
@@ -2116,22 +2224,63 @@ class SheetLightbox {
     });
   }
   isOpen() { return document.body.classList.contains('sheet-zoom-open'); }
-  /* S opens whatever sheet the slide on screen is already showing. */
+  /* Every picture on a slide, in the order they are read. */
+  picsOn(slide) {
+    return slide ? Array.from(slide.querySelectorAll('.sheet-fig, .picfig, .photo-grid figure, .poster-wrap')) : [];
+  }
+  figOf(el) {
+    /* the poster's button sits in the caption row under the poster, not inside
+       the poster's own box, so it is pointed back at the picture it belongs to */
+    const foot = el.closest('.poster-foot');
+    if (foot) return foot.parentElement.querySelector('.poster-wrap');
+    return el.closest('.sheet-fig, .picfig, .photo-grid figure, .poster-wrap');
+  }
+  /* S opens the first picture on the slide that is on screen. */
   openCurrent() {
     const slide = this.presentation.slides[this.presentation.current];
-    this.open(slide && slide.querySelector('.sheet-fig'));
+    this.open(this.picsOn(slide)[0]);
+  }
+  step(d) {
+    if (this.list.length < 2) return;
+    this.idx = (this.idx + d + this.list.length) % this.list.length;
+    this.paint(this.list[this.idx]);
+  }
+  /* The sheet travels in whole, rings and wash and all, so the box Igor is
+     pointing at is still ringed full screen. Any other picture goes in as the
+     picture itself, capped by the width AND the height of the room, so it takes
+     whichever runs out first and fills the wall either way. */
+  paint(fig) {
+    const sheet = fig.querySelector('.sheet');
+    this.inner.innerHTML = '';
+    if (sheet) {
+      const clone = sheet.cloneNode(true);
+      clone.style.transform = 'none';
+      clone.style.height = '';
+      this.inner.classList.remove('plain');
+      this.inner.appendChild(clone);
+    } else {
+      const img = fig.matches('img') ? fig : fig.querySelector('img');
+      if (!img) return;
+      const clone = img.cloneNode(true);
+      clone.removeAttribute('style');
+      clone.className = '';
+      this.inner.classList.add('plain');
+      this.inner.appendChild(clone);
+    }
+    this.opener = fig.querySelector('.pic-open') || null;
   }
   open(fig) {
-    const sheet = fig && fig.querySelector('.sheet');
-    if (!sheet) return;
-    const clone = sheet.cloneNode(true);
-    /* fitSheets may have left a scale on the thumbnail; the full-screen copy is
-       sized by its own box, so any inherited transform or height comes off. */
-    clone.style.transform = 'none';
-    clone.style.height = '';
-    this.inner.innerHTML = '';
-    this.inner.appendChild(clone);
-    this.opener = fig.querySelector('.sheet-open') || null;
+    if (!fig) return;
+    const slide = fig.closest('.slide');
+    this.list = this.picsOn(slide);
+    this.idx = Math.max(0, this.list.indexOf(fig));
+    this.paint(fig);
+    const many = this.list.length > 1;
+    this.prevBtn.classList.toggle('show', many);
+    this.nextBtn.classList.toggle('show', many);
+    if (this.hint) this.hint.textContent = many
+      ? 'left and right step through this slide\u2019s pictures \u00b7 Esc or click anywhere to close'
+      : 'Esc, click anywhere, or press S to close';
     document.body.classList.add('sheet-zoom-open');
     this.wrap.classList.add('open');
     document.getElementById('sheetZoomClose').focus();
@@ -2141,6 +2290,9 @@ class SheetLightbox {
     this.wrap.classList.remove('open');
     document.body.classList.remove('sheet-zoom-open');
     this.inner.innerHTML = '';
+    this.inner.classList.remove('plain');
+    this.prevBtn.classList.remove('show');
+    this.nextBtn.classList.remove('show');
     if (this.opener) { this.opener.focus(); this.opener = null; }
   }
 }
@@ -2559,6 +2711,7 @@ class InlineEditor {
    Sheets are cloned first so the inline editor sees the final markup.
    =========================================== */
 buildSheets();
+buildPictureButtons();
 const presentation = new SlidePresentation();
 const speakerNotes = new SpeakerNotesPanel(presentation);
 presentation.onTripleTap = () => speakerNotes.toggle();
@@ -2569,7 +2722,7 @@ new FontScaleController();
 new FullscreenController();
 new TeacherToggle();
 new CursorEffects();
-new SheetLightbox(presentation);
+new PictureLightbox(presentation);
 const coldCall = new ColdCallPicker();
 const deckNav = new DeckNav(presentation, coldCall);
 new InlineEditor(presentation);
