@@ -501,7 +501,7 @@ body.hide-teacher [data-teacher-only="true"] { display:none; }
 .notes-body .tag { display:inline-block; background:rgba(93,211,93,.55); color:#fff; padding:.1em .5em; font-size:.85em; font-weight:700; letter-spacing:.08em; margin-right:.4em; }
 .notes-body .tag.cfu { background:var(--p-z); }
 .notes-body .tag.tt  { background:var(--p-j); }
-.notes-hint { position:fixed; bottom:var(--chrome-bottom); right:calc(clamp(10px,1.5vw,20px) + var(--slide-num-w, 110px));
+.notes-hint { position:fixed; bottom:var(--chrome-bottom); right:calc(clamp(10px,1.5vw,20px) + var(--slide-num-w, 110px)); max-width:var(--hint-max, 40vw); max-height:44px; overflow:hidden; box-sizing:border-box; white-space:normal; line-height:1.2; text-align:right;
   font-family:var(--font-label); font-size:16px; letter-spacing:.05em; z-index:199;
   background:rgba(21,27,46,.92); color:#DDE4F5; padding:.2em .7em; pointer-events:none; opacity:.8; }
 
@@ -2859,8 +2859,15 @@ window.deck = { presentation: presentation, DECK_VERSION: DECK_VERSION, EDIT_KEY
    number's width is measured, not guessed, and re-measured whenever it changes. */
 (function () {
   const sn = document.querySelector('.slide-num'); if (!sn) return;
-  const set = () => document.documentElement.style.setProperty('--slide-num-w', Math.ceil(sn.getBoundingClientRect().width + 12) + 'px');
-  set(); window.addEventListener('resize', set); new ResizeObserver(set).observe(sn);
+  const set = () => {
+    const snW = Math.ceil(sn.getBoundingClientRect().width + 12);
+    document.documentElement.style.setProperty('--slide-num-w', snW + 'px');
+    const nav = document.querySelector('.deck-nav');
+    const navR = nav ? nav.getBoundingClientRect().right : 0;
+    const margin = Math.min(20, Math.max(10, window.innerWidth * 0.015));
+    document.documentElement.style.setProperty('--hint-max', Math.max(120, Math.floor(window.innerWidth - margin - snW - navR - 10)) + 'px');
+  };
+  set(); window.addEventListener('resize', set); const ro = new ResizeObserver(set); ro.observe(sn); const nv = document.querySelector('.deck-nav'); if (nv) ro.observe(nv);
 })();
 </script>
 </body>
