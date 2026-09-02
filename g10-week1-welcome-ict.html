@@ -773,7 +773,7 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
   <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// your_control_panel</p>
     <h2 class="reveal">This sheet is the spine of every lesson</h2>
-    <div class="sheet-fig big reveal sheet-slot" data-rings=""></div>
+    <div class="sheet-fig big reveal sheet-slot" data-rings="b2:red,b3:green,b5:gold"></div>
     <div class="reveal" style="margin-top:var(--element-gap); display:flex; flex-wrap:wrap; gap:0.6em 1.4em; align-items:center">
       <span class="chip">name on it &middot; handed in at the end &middot; kept as your record</span>
       <a class="linkbtn gold" href="https://docs.google.com/presentation/d/1iKpZh4ic0FaJeelzM3WseTOu_Asy3eTqem2y7xORRUc/edit" target="_blank" rel="noopener">&#9654; open the Learning Intention and Success Criteria sheet</a>
@@ -1298,21 +1298,26 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
 </section>
 
 <!-- 32 · Exit procedures -->
-<section class="slide g-stack" data-notes="<strong>Exit, 09:43 to 09:45 (2 min).</strong> Stand at the door. Sheets in as they leave, name checked on each one, because that stack is the progression record for the term. Dismiss by table, never all at once. <strong>Teacher, after they go: confirm the iSAMS register is finalised before the next class walks in.</strong> Next lesson opens with the Gemini rules slide, then the Tetris research step.">
-  <div class="slide-content">
+<section class="slide g-stack" data-notes="<strong>Exit, 09:43 to 09:45 (2 min).</strong> Stand at the door. Sheets in as they leave, name checked on each one, because that stack is the progression record for the term. Dismiss by table, never all at once. The sheet is up on screen with the name box in a gold ring, so &quot;name on it&quot; is a picture and not just a sentence you say twice. <strong>Teacher, after they go: confirm the iSAMS register is finalised before the next class walks in.</strong> Next lesson opens with the Gemini rules slide, then the Tetris research step.">
+  <div class="slide-content" style="max-width:min(96vw,2400px)">
     <p class="eyebrow reveal">// out_the_door</p>
     <h2 class="reveal">Out the door</h2>
-    <ul class="steps">
-      <li class="reveal"><b>Sheet handed to me at the door</b>, with your name on it. That is your record.</li>
-      <li class="reveal"><b>Desks back to the 2 desk format</b>, chairs in, nothing left on the floor.</li>
-      <li class="reveal"><b>Dismissed by table</b>, not all at once. I am standing at the door.</li>
-    </ul>
-    <p class="reveal" style="margin-top:var(--content-gap)">
-      <span class="chip big">CODE: yvyk3hu2</span>
-      &nbsp;<a class="linkbtn gold" href="https://classroom.google.com" target="_blank" rel="noopener">&#9654; open Google Classroom</a>
-    </p>
-    <div class="tblock i reveal" style="margin-top:var(--element-gap)"><b>Next lesson:</b> the Gemini rules, then you research what Tetris actually is.</div>
-    <div class="tcall reveal" data-teacher-only="true" style="margin-top:var(--element-gap)">confirm the iSAMS register is finalised before the next class walks in.</div>
+    <div class="two-col" style="align-items:start">
+      <div>
+        <ul class="steps">
+          <li class="reveal"><b>Sheet handed to me at the door</b>, with your name on it, in the gold ring. That is your record.</li>
+          <li class="reveal"><b>Desks back to the 2 desk format</b>, chairs in, nothing left on the floor.</li>
+          <li class="reveal"><b>Dismissed by table</b>, not all at once. I am standing at the door.</li>
+        </ul>
+        <p class="reveal" style="margin-top:var(--content-gap)">
+          <span class="chip big">CODE: yvyk3hu2</span>
+          &nbsp;<a class="linkbtn gold" href="https://classroom.google.com" target="_blank" rel="noopener">&#9654; open Google Classroom</a>
+        </p>
+        <div class="tblock i reveal" style="margin-top:var(--element-gap)"><b>Next lesson:</b> the Gemini rules, then you research what Tetris actually is.</div>
+        <div class="tcall reveal" data-teacher-only="true" style="margin-top:var(--element-gap)">confirm the iSAMS register is finalised before the next class walks in.</div>
+      </div>
+      <div class="col-img reveal sheet-fig sheet-slot" data-rings="b1:gold"></div>
+    </div>
   </div>
 </section>
 
@@ -1375,6 +1380,15 @@ body.sheet-zoom-open .deck-nav, body.picker-open .deck-nav { display:none; }
   <button class="sheet-zoom-step" id="sheetZoomNext" type="button" aria-label="The next picture on this slide">&#9654;</button>
   <button class="sheet-zoom-close" id="sheetZoomClose" type="button" aria-label="Close the picture">&#10005; close</button>
   <p class="sheet-zoom-hint" id="sheetZoomHint">Esc, click anywhere, or press S to close</p>
+</div>
+
+<!-- The sheet, kept off screen, so the presenter key S is never a dead key.
+     The title slide promises "S sheet full screen". On a slide that carries its
+     own picture, S opens that picture; on a slide that carries none, it opens
+     this clean copy of the sheet, with no ring and no wash on it, because no
+     box on it is the one being pointed at. It sits outside every slide, so the
+     picture fitter and the sweep never see it. -->
+<div id="globalSheet" class="sheet-fig sheet-slot" data-rings="" style="display:none" aria-hidden="true">
 </div>
 
 <!-- On-screen navigation, so a lesson with no clicker in the room still moves.
@@ -2235,10 +2249,11 @@ class PictureLightbox {
     if (foot) return foot.parentElement.querySelector('.poster-wrap');
     return el.closest('.sheet-fig, .picfig, .photo-grid figure, .poster-wrap');
   }
-  /* S opens the first picture on the slide that is on screen. */
+  /* S opens the first picture on the slide that is on screen, and the sheet
+     itself when this slide has no picture of its own. */
   openCurrent() {
     const slide = this.presentation.slides[this.presentation.current];
-    this.open(this.picsOn(slide)[0]);
+    this.open(this.picsOn(slide)[0] || document.getElementById('globalSheet'));
   }
   step(d) {
     if (this.list.length < 2) return;
@@ -2293,7 +2308,8 @@ class PictureLightbox {
     this.inner.classList.remove('plain');
     this.prevBtn.classList.remove('show');
     this.nextBtn.classList.remove('show');
-    if (this.opener) { this.opener.focus(); this.opener = null; }
+    if (this.opener && this.opener.offsetParent) { this.opener.focus(); }
+    this.opener = null;
   }
 }
 
